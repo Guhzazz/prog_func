@@ -1,2 +1,2 @@
 # prog-fun
-Trabalhos da disciplina de Programação Funcional
+Trabalho 01 da disciplina de Programação Funcional
