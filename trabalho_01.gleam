@@ -44,3 +44,39 @@ pub type Servico{
 
 }
 
+/// Tipo produto: aplicação distribuída, conjunto de serviços de topo.
+pub type Aplicacao {
+  Aplicacao(nome: String, servicos: List(Servico))
+}
+
+// F1: criação e validação
+
+/// Verifica se um id é válido(maior que 0)
+pub fn validar_id(id: Int) -> Result(Nil, String) {
+  case id > 0 {
+    True -> Ok(Nil)
+    False -> Error("id deve ser um inteiro positivo")
+  }
+}
+
+/// Verifica se um nome é válido(não pode ser vazio)
+pub fn validar_nome(nome: String) -> Result(Nil, String) {
+  case nome {
+    "" -> Error("nome do serviço não pode ser vazio")
+    _ -> Ok(Nil)
+  }
+}
+
+
+/// Verifica se todas as métricas de todas as instâncias têm
+/// disponibilidade dentro da faixa válida (0, 100).
+fn validar_instancias(instancias: List(Instancia)) -> Result(Nil, String) {
+  case instancias {
+    [] -> Ok(Nil)
+    [primeiro, ..resto] ->
+      case validar_metricas(primeiro.metricas) {
+        Error(msg) -> Error(msg)
+        Ok(_) -> validar_instancias(resto)
+      }
+  }
+}
