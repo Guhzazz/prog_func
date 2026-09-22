@@ -1,7 +1,7 @@
 // F1 - Criacao e validacao de valores do dominio.
 
 import servicos_nuvem/tipos.{ type Instancia, type Metrica, type Servico,
-  type TipoServico
+  type TipoServico, type ErroValidacao
 }
 
 
