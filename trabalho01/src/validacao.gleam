@@ -43,7 +43,7 @@ pub fn nova_metrica(
 
 /// Verifica, por recursao estrutural, se todas as metricas de uma lista
 /// sao validas. Devolve o primeiro erro encontrado.
-pub fn validar_metricas(metricas: List(Metrica)) -> Result(Nil, Error) {
+pub fn validar_metricas(metricas: List(Metrica)) -> Result(Nil, ErroValidacao) {
   case metricas {
     [] -> Ok(Nil)
     [m, ..resto] ->
@@ -88,7 +88,7 @@ pub fn nova_instancia(
 /// Verifica, por recursao estrutural, se todas as instancias sao validas.
 pub fn validar_instancias(
   instancias: List(Instancia),
-) -> Result(Nil, Error) {
+) -> Result(Nil, ErroValidacao) {
   case instancias {
     [] -> Ok(Nil)
     [i, ..resto] ->
@@ -100,12 +100,37 @@ pub fn validar_instancias(
 }
 
 
-
+/// Valida o identificador, o nome, todas as instancias e, recursivamente,
+/// todos os servicos dos quais ele depende.
+pub fn novo_servico(
+  id: Int,
+  nome: String,
+  tipo: TipoServico,
+  instancias: List(Instancia),
+  dependencias: List(Servico),
+) -> Result(Servico, ErroValidacao) {
+  case id > 0 {
+    False -> Error(IdInvalido)
+    True ->
+      case nome {
+        "" -> Error(NomeVazio)
+        _ ->
+          case validar_instancias(instancias) {
+            Error(erro) -> Error(erro)
+            Ok(_) ->
+              case validar_servicos(dependencias) {
+                Error(erro) -> Error(erro)
+                Ok(_) -> Ok(Servico(id, nome, tipo, instancias, dependencias))
+              }
+          }
+      }
+  }
+}
 
 
 /// Valida uma lista de servicos percorrendo tambem suas dependencias
 /// (recursao sobre o tipo autorreferente).
-pub fn validar_servicos(servicos: List(Servico)) -> Result(Nil, Error) {
+pub fn validar_servicos(servicos: List(Servico)) -> Result(Nil, ErroValidacao) {
   case servicos {
     [] -> Ok(Nil)
     [s, ..resto] ->

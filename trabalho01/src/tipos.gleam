@@ -25,8 +25,8 @@ pub type ErroValidacao {
 
 
 /// Represeta todos os indicadores de desempenho e telemetria capturados de uma instância em um único registro.
-pub type Metricas {
-  Metricas(
+pub type Metrica {
+  Metrica(
     id: Int,
     requisicoes: Int,
     tempo_resposta_ms: Float,
