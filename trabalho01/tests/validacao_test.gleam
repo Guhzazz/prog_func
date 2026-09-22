@@ -3,7 +3,8 @@
 
 import sgleam/check
 import src/tipos.{
-Instancia, Metrica, Servico,
+  DisponibilidadeForaDaFaixa, FalhasExcedemRequisicoes, IdInvalido, Instancia,
+  Metrica, NomeVazio, Servico, TempoRespostaNegativo,
 }
 import src/validacao
 
