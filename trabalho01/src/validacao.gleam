@@ -105,7 +105,7 @@ pub fn validar_instancias(
 pub fn novo_servico(
   id: Int,
   nome: String,
-  tipo: TipoServico,
+  status: Status,
   instancias: List(Instancia),
   dependencias: List(Servico),
 ) -> Result(Servico, ErroValidacao) {
@@ -120,7 +120,7 @@ pub fn novo_servico(
             Ok(_) ->
               case validar_servicos(dependencias) {
                 Error(erro) -> Error(erro)
-                Ok(_) -> Ok(Servico(id, nome, tipo, instancias, dependencias))
+                Ok(_) -> Ok(Servico(id, nome, status, instancias, dependencias))
               }
           }
       }
@@ -134,7 +134,7 @@ pub fn validar_servicos(servicos: List(Servico)) -> Result(Nil, ErroValidacao) {
   case servicos {
     [] -> Ok(Nil)
     [s, ..resto] ->
-      case novo_servico(s.id, s.nome, s.tipo, s.instancias, s.dependencias) {
+      case novo_servico(s.id, s.nome, s.status, s.instancias, s.dependencias) {
         Error(erro) -> Error(erro)
         Ok(_) -> validar_servicos(resto)
       }

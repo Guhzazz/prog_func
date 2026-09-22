@@ -1,7 +1,7 @@
 
 /// Representa os papéis dos serviços da arquitetura em nuvem
 pub type TipoServico {
-  API
+  Api
   BancoDados
   Armazenamento
   Autenticacao
