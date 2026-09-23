@@ -39,3 +39,63 @@ pub fn total_falhas(metricas: List(Metrica)) -> Int {
     [primeiro, ..resto] -> primeiro.falhas + total_falhas(resto)
   }
 }
+
+
+///Devolve a soma das requisicoes da lista de metricas.
+pub fn total_requisicoes(metricas: List(Metrica)) -> Int {
+  case metricas {
+    [] -> 0
+    [m, ..resto] -> m.requisicoes + total_requisicoes(resto)
+  }
+}
+
+/// Devolve a soma das disponibilidades da lista de metricas.
+ pub fn soma_disponibilidade(metricas: List(Metrica)) -> Float {
+  case metricas {
+    [] -> 0.0
+    [m, ..resto] -> m.disponibilidade +. soma_disponibilidade(resto)
+  }
+}
+
+/// Devolve a soma dos tempos de resposta da lista de metricas.
+pub fn soma_tempo_resposta(metricas: List(Metrica)) -> Float {
+  case metricas {
+    [] -> 0.0
+    [m, ..resto] -> m.tempo_resposta_ms +. soma_tempo_resposta(resto)
+  }
+}
+
+/// Devolve a disponibilidade media das metricas.
+/// Para a lista vazia devolve 0.0, indicando ausencia de dado.
+pub fn disponibilidade_media(metricas: List(Metrica)) -> Float {
+  case quantidade_metricas(metricas) {
+    0 -> 0.0
+    n -> soma_disponibilidade(metricas) /. int.to_float(n)
+  }
+}
+
+/// Devolve o tempo medio de resposta das metricas.
+pub fn tempo_resposta_medio(metricas: List(Metrica)) -> Float {
+  case quantidade_metricas(metricas) {
+    0 -> 0.0
+    n -> soma_tempo_resposta(metricas) /. int.to_float(n)
+  }
+}
+
+// F4 - Filtragem Recursiva
+
+/// Devolve uma nova lista apenas com as metricas cuja
+/// disponibilidade esta abaixo do limite informado.
+pub fn metricas_abaixo_de(
+  metricas: List(Metrica),
+  limite: Float,
+) -> List(Metrica) {
+  case metricas {
+    [] -> []
+    [m, ..resto] ->
+      case m.disponibilidade <. limite {
+        True -> [m, ..metricas_abaixo_de(resto, limite)]
+        False -> metricas_abaixo_de(resto, limite)
+      }
+  }
+}
