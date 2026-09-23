@@ -37,7 +37,7 @@ pub type Metrica {
 
 /// Representa a instância de execução de um serviço
 pub type Instancia{
-  Instancia(id: Int, nome: String, metricas: List(Metricas))
+  Instancia(id: Int, nome: String, metricas: List(Metrica))
 }
 
 
@@ -46,6 +46,7 @@ pub type Servico{
   Servico(
     id: Int,
     nome: String,
+    tipo_servico: TipoServico,
     status: Status,
     instancias: List(Instancia),
     dependencias: List(Servico)
