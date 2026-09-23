@@ -8,7 +8,7 @@ import src/tipos.{type Instancia, type Metrica}
 /// Devolve uma nova lista com os elementos de lst1 seguidos dos de lst2.
 pub fn concatenar(lst1: List(Metrica), lst2: List(Metrica)) -> List(Metrica) {
   case lst1 {
-    [] -> last2
+    [] -> lst2
     [primeiro, ..resto] -> [primeiro, ..concatenar(resto, lst2)]
   }
 }
