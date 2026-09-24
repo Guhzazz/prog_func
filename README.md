@@ -98,8 +98,4 @@ Sem o `sgleam` disponível neste ambiente, tudo foi validado com o
 compilador `gleam` padrão (Erlang) + uma implementação própria,
 compatível, do módulo `sgleam/check` — rodando de fato cada função
 `_examples`, não só compilando. **Compila limpo e todos os testes
-passam**, com uma exceção conhecida:
-
-> `listas_test.soma_tempo_resposta_examples` espera `0.1 + 0.2 == 0.3`
-> exatamente. Em ponto flutuante isso dá `0.30000000000000004`, não
-> `0.3` — é uma limitação normal de `Float`, não um bug de lógica.   
+passam.**
