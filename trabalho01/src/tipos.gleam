@@ -47,7 +47,6 @@ pub type Servico{
     id: Int,
     nome: String,
     tipo_servico: TipoServico,
-    status: Status,
     instancias: List(Instancia),
     dependencias: List(Servico)
   )
