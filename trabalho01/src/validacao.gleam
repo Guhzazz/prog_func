@@ -1,9 +1,10 @@
 // F1 - Criacao e validacao de valores do dominio.
 
-import servicos_nuvem/tipos.{ type Instancia, type Metrica, type Servico,
-  type TipoServico, type ErroValidacao
+import src/tipos.{
+  type ErroValidacao, type Instancia, type Metrica, type Servico,
+  type TipoServico, DisponibilidadeForaDaFaixa, FalhasExcedemRequisicoes,
+  IdInvalido, Instancia, Metrica, NomeVazio, Servico, TempoRespostaNegativo,
 }
-
 
 /// Cria uma metrica valida a partir dos dados coletados, ou devolve o
 /// primeiro erro de validacao encontrado.

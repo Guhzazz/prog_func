@@ -99,3 +99,92 @@ pub fn metricas_abaixo_de(
       }
   }
 }
+
+// F5 - Transformacao recursiva
+
+/// Devolve uma nova lista de metricas com a disponibilidade recalculada,
+/// penalizada pela taxa de falhas (falhas / requisicoes, em pontos
+/// percentuais), sem nunca ficar negativa. Nao altera a lista original
+/// (imutabilidade estrutural) - cada Metrica penalizada e um valor novo.
+pub fn penalizar_por_falhas(metricas: List(Metrica)) -> List(Metrica) {
+  case metricas {
+    [] -> []
+    [m, ..resto] -> [penalizar_metrica(m), ..penalizar_por_falhas(resto)]
+  }
+}
+
+fn penalizar_metrica(metrica: Metrica) -> Metrica {
+  case metrica.requisicoes {
+    0 -> metrica
+    _ -> {
+      let taxa_falha = int.to_float(metrica.falhas) /. int.to_float(metrica.requisicoes)
+      let penalizada = metrica.disponibilidade -. taxa_falha *. 100.0
+      let nova = case penalizada <. 0.0 {
+        True -> 0.0
+        False -> penalizada
+      }
+      Metrica(..metrica, disponibilidade: nova)
+    }
+  }
+}
+
+// F6 - Busca
+
+/// Localiza uma instancia pelo id em uma lista. Error(Nil) se nao
+/// encontrada.
+pub fn buscar_instancia_por_id(
+  instancias: List(Instancia),
+  id_procurado: Int,
+) -> Result(Instancia, Nil) {
+  case instancias {
+    [] -> Error(Nil)
+    [i, ..resto] ->
+      case i.id == id_procurado {
+        True -> Ok(i)
+        False -> buscar_instancia_por_id(resto, id_procurado)
+      }
+  }
+}
+
+// F7 - Maior ou menor elemento
+
+/// Metrica com a menor disponibilidade registrada em uma lista.
+pub fn metrica_com_menor_disponibilidade(
+  metricas: List(Metrica),
+) -> Result(Metrica, Nil) {
+  case metricas {
+    [] -> Error(Nil)
+    [unica] -> Ok(unica)
+    [primeira, ..resto] ->
+      case metrica_com_menor_disponibilidade(resto) {
+        Error(Nil) -> Ok(primeira)
+        Ok(pior) ->
+          case primeira.disponibilidade <. pior.disponibilidade {
+            True -> Ok(primeira)
+            False -> Ok(pior)
+          }
+      }
+  }
+}
+
+/// Instancia com mais falhas acumuladas em suas metricas (usa
+/// total_falhas, de F3, como auxiliar).
+pub fn instancia_com_mais_falhas(
+  instancias: List(Instancia),
+) -> Result(Instancia, Nil) {
+  case instancias {
+    [] -> Error(Nil)
+    [unica] -> Ok(unica)
+    [primeira, ..resto] ->
+      case instancia_com_mais_falhas(resto) {
+        Error(Nil) -> Ok(primeira)
+        Ok(campea) ->
+          case
+            total_falhas(primeira.metricas) > total_falhas(campea.metricas)
+          {
+            True -> Ok(primeira)
+            False -> Ok(campea)
+          }
+      }
+  }
+}

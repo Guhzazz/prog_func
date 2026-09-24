@@ -145,3 +145,44 @@ pub fn metricas_abaixo_de_examples() {
     [Metrica(1, 10, 1.0, 5, 80.0), Metrica(3, 10, 1.0, 3, 95.0)],
   )
 }
+// F5 - transformacao recursiva
+pub fn penalizar_por_falhas_examples() {
+  check.eq(listas.penalizar_por_falhas([]), [])
+  check.eq(
+    listas.penalizar_por_falhas([Metrica(1, 100, 10.0, 10, 99.0)]),
+    [Metrica(1, 100, 10.0, 10, 89.0)],
+  )
+  // sem requisicoes: nao ha divisao por zero, metrica fica inalterada
+  check.eq(
+    listas.penalizar_por_falhas([Metrica(1, 0, 0.0, 0, 100.0)]),
+    [Metrica(1, 0, 0.0, 0, 100.0)],
+  )
+}
+
+// F6 - busca
+pub fn buscar_instancia_por_id_examples() {
+  let instancias = [Instancia(1, "a", []), Instancia(2, "b", [])]
+  check.eq(
+    listas.buscar_instancia_por_id(instancias, 2),
+    Ok(Instancia(2, "b", [])),
+  )
+  check.eq(listas.buscar_instancia_por_id(instancias, 99), Error(Nil))
+  check.eq(listas.buscar_instancia_por_id([], 1), Error(Nil))
+}
+
+// F7 - maior/menor elemento
+pub fn metrica_com_menor_disponibilidade_examples() {
+  check.eq(listas.metrica_com_menor_disponibilidade([]), Error(Nil))
+  let m1 = Metrica(1, 10, 1.0, 1, 99.0)
+  let m2 = Metrica(2, 10, 1.0, 40, 60.0)
+  let m3 = Metrica(3, 10, 1.0, 10, 90.0)
+  check.eq(listas.metrica_com_menor_disponibilidade([m1, m2, m3]), Ok(m2))
+}
+
+pub fn instancia_com_mais_falhas_examples() {
+  check.eq(listas.instancia_com_mais_falhas([]), Error(Nil))
+  let i1 = Instancia(1, "a", [Metrica(1, 10, 1.0, 1, 99.0)])
+  let i2 = Instancia(2, "b", [Metrica(2, 10, 1.0, 40, 60.0)])
+  let i3 = Instancia(3, "c", [Metrica(3, 10, 1.0, 10, 90.0)])
+  check.eq(listas.instancia_com_mais_falhas([i1, i2, i3]), Ok(i2))
+}
