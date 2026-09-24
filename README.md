@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # prog_func
 Trabalhos da disciplina de Programação Funcional
 =======
@@ -107,4 +106,3 @@ passam**, com uma exceção conhecida:
 > `listas_test.soma_tempo_resposta_examples` espera `0.1 + 0.2 == 0.3`
 > exatamente. Em ponto flutuante isso dá `0.30000000000000004`, não
 > `0.3` — é uma limitação normal de `Float`, não um bug de lógica.   
->>>>>>> gusta
