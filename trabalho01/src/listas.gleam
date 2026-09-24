@@ -3,7 +3,7 @@
 //// (F4).
 
 import gleam/int
-import src/tipos.{type Instancia, type Metrica}
+import src/tipos.{type Instancia, type Metrica, Metrica}
 
 /// Devolve uma nova lista com os elementos de lst1 seguidos dos de lst2.
 pub fn concatenar(lst1: List(Metrica), lst2: List(Metrica)) -> List(Metrica) {

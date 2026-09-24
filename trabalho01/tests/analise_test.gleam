@@ -37,7 +37,6 @@ pub fn classificar_servico_examples() {
         id: 1,
         nome: "s",
         tipo_servico: Api,
-        status: Indisponivel,
         instancias: [],
         dependencias: [],
       ),
@@ -50,7 +49,6 @@ pub fn classificar_servico_examples() {
         id: 4,
         nome: "storage",
         tipo_servico: Armazenamento,
-        status: Indisponivel,
         instancias: [
           Instancia(4, "s3-regional", [Metrica(6, 300, 400.0, 60, 85.0)]),
         ],
@@ -65,7 +63,6 @@ pub fn classificar_servico_examples() {
         id: 3,
         nome: "database",
         tipo_servico: BancoDados,
-        status: Operacional,
         instancias: [
           Instancia(3, "db-primario", [
             Metrica(4, 5000, 15.0, 2, 99.99),
