@@ -1,10 +1,9 @@
 # prog_func
 Trabalhos da disciplina de Programação Funcional
-=======
 # Monitoramento de Serviços em Nuvem — Trabalho Prático 1
 
 **Disciplina:** Programação Funcional  
-**Tema (Seção 4, item 8):** Monitoramento de serviços e instâncias de uma aplicação distribuída  
+**Tema (Seção 4, item 8):** Monitoramento de serviços e instâncias de uma aplicação em nuvem  
 **Integrantes:** Bernardo Wilchen de Oliveira, Gustavo Valério dos Santos  
 **Linguagem/ferramenta:** Gleam, testado com **`sgleam`**
 
@@ -40,10 +39,10 @@ ficar desatualizado.
 — um grafo de dependências entre serviços. Assumimos que esse grafo não
 tem ciclos (documentado em `hierarquia.gleam`).
 
-> **Decisão de design:** `Servico` tem 6 campos, sem um campo `status`
+> **Decisão de design:** `Servico` tem 5 campos, sem um campo `status`
 > separado. Um rascunho anterior tinha `status: Status` guardado junto
 > com `tipo_servico`, mas isso conflitava com um teste que já existia
-> (`validacao_test.gleam`, que sempre assumiu 5 campos) e, mais
+> (`analise_test.gleam`, que sempre assumiu 5 campos) e, mais
 > importante, nenhuma função do projeto chegou a *ler* esse campo — o
 > status sempre foi recalculado a partir das métricas. Resolvido a favor
 > dos 5 campos.
@@ -86,23 +85,11 @@ trabalho01/
 A partir da pasta `trabalho01/`:
 
 ```
-sgleam test tests/validacao_test.gleam
-sgleam test tests/listas_test.gleam
-sgleam test tests/hierarquia_test.gleam
-sgleam test tests/analise_test.gleam
+sgleam -t tests/validacao_test.gleam
+sgleam -t tests/listas_test.gleam
+sgleam -t tests/hierarquia_test.gleam
+sgleam -t tests/analise_test.gleam
 ```
 
 Os imports internos (`import src/tipos`, `import src/analise` etc.)
 assumem que o comando é rodado de dentro de `trabalho01/`.
-
-### Como isso foi validado
-
-Sem o `sgleam` disponível neste ambiente, tudo foi validado com o
-compilador `gleam` padrão (Erlang) + uma implementação própria,
-compatível, do módulo `sgleam/check` — rodando de fato cada função
-`_examples`, não só compilando. **Compila limpo e todos os testes
-passam**, com uma exceção conhecida:
-
-> `listas_test.soma_tempo_resposta_examples` espera `0.1 + 0.2 == 0.3`
-> exatamente. Em ponto flutuante isso dá `0.30000000000000004`, não
-> `0.3` — é uma limitação normal de `Float`, não um bug de lógica.   
