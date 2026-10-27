@@ -82,16 +82,16 @@ pub fn total_requisicoes_examples() {
 }
 
 pub fn soma_disponibilidade_examples(){
-    check.eq(soma_disponibilidade([]), 0.0)
-    check.eq(soma_disponibilidade([Metrica(1, 10, 1.0, 0,  55.0), Metrica(2, 10, 1.0, 0, 45.0)]), 100.0)
-    check.eq(soma_disponibilidade([Metrica(3, 10, 1.0, 0, 0.0), Metrica(4, 10, 1.0, 0, 100.0)]), 100.0)
+    check.eq(listas.soma_disponibilidade([]), 0.0)
+    check.eq(listas.soma_disponibilidade([Metrica(1, 10, 1.0, 0,  55.0), Metrica(2, 10, 1.0, 0, 45.0)]), 100.0)
+    check.eq(listas.soma_disponibilidade([Metrica(3, 10, 1.0, 0, 0.0), Metrica(4, 10, 1.0, 0, 100.0)]), 100.0)
 
 }
 
 pub fn soma_tempo_resposta_examples(){
-    check.eq(soma_tempo_resposta([]), 0.0)
-    check.eq(soma_tempo_resposta([Metrica(1, 10, 0.1, 0, 100.0), Metrica(2, 10, 0.2, 0, 100.0)]), 0.3)
-    check.eq(soma_tempo_resposta([Metrica(3, 10, 1.0, 0, 100.0), Metrica(4, 10, 0.5, 0, 100.0)]), 1.5)
+    check.eq(listas.soma_tempo_resposta([]), 0.0)
+    check.eq(listas.soma_tempo_resposta([Metrica(1, 10, 0.0, 0, 100.0), Metrica(2, 10, 0.25, 0, 100.0)]), 0.25)
+    check.eq(listas.soma_tempo_resposta([Metrica(3, 10, 1.0, 0, 100.0), Metrica(4, 10, 0.5, 0, 100.0)]), 1.5)
 }
 
 pub fn disponibilidade_media_examples() {
