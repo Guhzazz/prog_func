@@ -39,8 +39,12 @@ fn ligar_painel(jogador: Jogador) -> Jogador {
   }
 }
 
-fn examinar_porta(jogador: Jogador) -> Jogador {
-  jogador
+/// A porta só abre depois do terminal de saída liberar a rota; sem isso, nada acontece
+fn abrir_porta(jogador: Jogador) -> Jogador {
+  case tem_item(jogador, "rota liberada") {
+    True -> adicionar_item(jogador, "porta aberta")
+    False -> jogador
+  }
 }
 
 // Descrição dos objetos do hospital(funções fn() -> Jogador ainda não implementadas)
@@ -70,7 +74,17 @@ pub fn painel() -> Objeto {
 }
 
 pub fn porta_emergencia() -> Objeto {
-  Objeto("porta de emergência", "Porta da saída de evacuação, trancada.", examinar_porta, "trancada")
+  Objeto("porta de emergência", "Porta da saída de evacuação, trancada.", abrir_porta, "trancada")
+}
+
+pub fn porta_emergencia_examples() {
+  let j = jogador.novo_jogador("Ana", "Saída")
+  let #(porta, j2) = interagir(porta_emergencia(), j)
+  check.eq(porta.estado, "trancada")
+  check.eq(tem_item(j2, "porta aberta"), False)
+  let #(porta2, j3) = interagir(porta_emergencia(), adicionar_item(j, "rota liberada"))
+  check.eq(porta2.estado, "usado")
+  check.eq(tem_item(j3, "porta aberta"), True)
 }
 
 // Operações
@@ -107,6 +121,6 @@ pub fn descrever(objeto: Objeto) -> String {
 pub fn descrever_examples() {
   check.eq(
     descrever(lanterna()),
-    "lanterna: Uma lanterna caída no chão. [intacto]",
+    "lanterna: Uma lanterna caída no chão [intacto]",
   )
 }
