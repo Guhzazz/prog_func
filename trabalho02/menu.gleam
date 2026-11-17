@@ -1,6 +1,6 @@
 //// Módulo menu — camada de apresentação do simulador Hospital no Escuro.
 //// Concentra a exibição no terminal (gleam/io), os tipos soma de navegação
-//// e as funções nomeadas (m1, m2, ..., exit) separadas da lógica pura.
+//// e as funções nomeadas (m1, m2, ..., exit).
 
 import gleam/int
 import gleam/io
@@ -34,7 +34,7 @@ pub fn display_main_menu() -> Nil {
   io.println("exit(): Encerrar simulação")
 }
 
-// Funções nomeadas para seleção de opções no menu funcional (Seção 6).
+// Funções nomeadas para seleção de opções no menu funcional.
 
 pub fn m1() -> MainMenu {
   Explorar
@@ -141,7 +141,7 @@ pub fn executar_menu(
 }
 
 /// Executa recursivamente uma lista de passos de menu #(MainMenu, String),
-/// exibindo cada etapa no terminal (útil para demonstração da partida).
+/// exibindo cada etapa no terminal.
 pub fn executar_roteiro(
   estado: Estado,
   passos: List(#(MainMenu, String)),
