@@ -1,24 +1,30 @@
+//// Módulo jogador — o jogador e as funções puras que devolvem um novo
+//// jogador (inventário, movimento e pontos de vida).
+
 import gleam/list
 import sgleam/check
 
-pub type Jogador{
-    Jogador(
-        nome: String,
-        inventario: List(String),
-        pontos_de_vida: Int,
-        localizacao: String
-    )
+/// O jogador: nome, itens coletados, vida e a sala onde está.
+pub type Jogador {
+  Jogador(
+    nome: String,
+    inventario: List(String),
+    pontos_de_vida: Int,
+    localizacao: String,
+  )
 }
 
 /// Cria um novo jogador no ambiente inicial, sem itens e com a vida cheia
-pub fn novo_jogador(nome: String, localizacao: String)-> Jogador{
-    Jogador(nome, [], 100, localizacao)
+pub fn novo_jogador(nome: String, localizacao: String) -> Jogador {
+  Jogador(nome, [], 100, localizacao)
 }
 
-pub fn novo_jogador_examples(){
-    check.eq(novo_jogador("Ana", "Manutenção"), Jogador("Ana", [], 100, "Manutenção"))
+pub fn novo_jogador_examples() {
+  check.eq(
+    novo_jogador("Ana", "Manutenção"),
+    Jogador("Ana", [], 100, "Manutenção"),
+  )
 }
-
 
 /// Adiciona um item ao inventário.
 pub fn adicionar_item(jogador: Jogador, item: String) -> Jogador {
@@ -32,7 +38,6 @@ pub fn adicionar_item_examples() {
   )
 }
 
-
 /// Verifica se o jogador possui o item.
 pub fn tem_item(jogador: Jogador, item: String) -> Bool {
   list.contains(jogador.inventario, item)
@@ -43,7 +48,6 @@ pub fn tem_item_examples() {
   check.eq(tem_item(j, "chave"), True)
   check.eq(tem_item(j, "crachá"), False)
 }
-
 
 /// Move o jogador para outro ambiente.
 pub fn mover(jogador: Jogador, destino: String) -> Jogador {
@@ -56,7 +60,6 @@ pub fn mover_examples() {
     "Corredor",
   )
 }
-
 
 /// Reduz a vida do jogador, sem ficar abaixo de zero.
 pub fn perder_vida(jogador: Jogador, dano: Int) -> Jogador {
