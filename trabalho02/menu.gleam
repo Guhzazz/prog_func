@@ -2,9 +2,10 @@
 //// Concentra a exibição no terminal (gleam/io), os tipos soma de navegação
 //// e as funções nomeadas (m1, m2, ..., exit).
 
+import configuracao
+import gleam/string
 import gleam/int
 import gleam/io
-import gleam/list
 import jogo.{
   type Acao, type Estado, Derrota, EmAndamento, Vitoria, executar, novo_jogo,
   sala_atual, situacao,
@@ -144,62 +145,95 @@ pub fn executar_menu(
 /// exibindo cada etapa no terminal.
 pub fn executar_roteiro(
   estado: Estado,
-  passos: List(#(MainMenu, String)),
+  passos: List(Acao),
 ) -> Estado {
   case passos {
     [] -> estado
-    [#(opcao, arg), ..resto] -> {
-      let proximo = executar_menu(estado, opcao, arg)
-      case situacao(proximo) {
-        EmAndamento -> executar_roteiro(proximo, resto)
-        _ -> proximo
+
+    [acao, ..resto] -> {
+      let resultado = executar(estado, acao)
+
+      io.println("\n> " <> resultado.1)
+      exibir_status(resultado.0)
+
+      case situacao(resultado.0) {
+        EmAndamento ->
+          executar_roteiro(resultado.0, resto)
+
+        _ -> resultado.0
       }
     }
   }
 }
 
+
 /// Roteiro completo de fuga do Hospital no Escuro usando as funções de menu.
-pub fn roteiro_demonstracao() -> List(#(MainMenu, String)) {
+
+pub fn roteiro_demonstracao() -> List(Acao) {
   [
-    #(m1(), ""),
-    #(m4(), "lanterna"),
-    #(m4(), "chave"),
-    #(m4(), "registro"),
-    #(m4(), "planta"),
-    #(m2(), ""),
-    #(m5(), "Corredor"),
-    #(m4(), "crachá"),
-    #(m3(), ""),
-    #(m6(), "3"),
-    #(m5(), "Sala 3"),
-    #(m4(), "painel"),
-    #(m3(), ""),
-    #(m6(), "312"),
-    #(m5(), "Saída"),
-    #(m3(), ""),
-    #(m6(), "B12"),
-    #(m4(), "porta de emergência"),
+    jogo.Explorar,
+    jogo.Usar("lanterna"),
+    jogo.Usar("chave"),
+    jogo.Usar("registro"),
+    jogo.Usar("planta"),
+    jogo.Inventario,
+
+    jogo.Ir("Corredor"),
+    jogo.Usar("crachá"),
+    jogo.Enigmas,
+    jogo.Responder("3"),
+
+    jogo.Ir("Sala 3"),
+    jogo.Usar("gerador"),
+    jogo.Usar("painel"),
+    jogo.Enigmas,
+
+    jogo.Responder(
+      "3" <> string.slice(
+        configuracao.codigo_saida,
+        1,
+        2,
+      ),
+    ),
+
+    jogo.Ir("Saída"),
+    jogo.Enigmas,
+    jogo.Responder(configuracao.codigo_saida),
+    jogo.Usar("porta de emergência"),
   ]
 }
 
+
+
 pub fn roteiro_demonstracao_examples() {
   let inicial = novo_jogo("Ana")
+
   let final =
-    list.fold(roteiro_demonstracao(), inicial, fn(est, passo) {
-      case opcao_para_acao(passo.0, passo.1) {
-        Ok(acao) -> executar(est, acao).0
-        Error(Nil) -> est
-      }
-    })
+    jogo.executar_todas(
+      inicial,
+      roteiro_demonstracao(),
+    )
+
   check.eq(situacao(final), Vitoria)
   check.eq(sala_atual(final).nome, "Saída")
 }
+
 
 /// Ponto de entrada para demonstração completa no terminal.
 pub fn main() -> Nil {
   io.println("==========================================")
   io.println("   ESCAPE ROOM: HOSPITAL NO ESCURO")
   io.println("==========================================")
+
+  io.println("")
+  io.println("Um apagão atingiu o hospital!")
+  io.println("Você pertence à equipe de manutenção.")
+  io.println("A sala de Manutenção ficou trancada.")
+  io.println("Encontre uma chave, procure pistas e restaure a energia.")
+  io.println("Cuidado: caminhar pelo Corredor sem lanterna é perigoso.")
+  io.println("Seu objetivo é liberar a porta magnética de emergência.")
+  io.println("")
+
   display_main_menu()
 
   let estado_inicial = novo_jogo("Ana")
