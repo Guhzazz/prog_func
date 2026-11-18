@@ -434,25 +434,15 @@ fn selecionar(tela: Tela, indice: Int) -> Tela {
       }
 
     "objetos" ->
-      case list.at(
-        jogo.sala_atual(tela.estado).objetos,
-        indice,
-      ) {
-        Ok(obj) ->
-          executar_acao(tela, jogo.Usar(obj.nome))
-
-        Error(_) -> tela
+      case list.drop(jogo.sala_atual(tela.estado).objetos, indice) {
+        [obj, ..] -> executar_acao(tela, jogo.Usar(obj.nome))
+        [] -> tela
       }
 
     "destinos" ->
-      case list.at(
-        jogo.sala_atual(tela.estado).saidas,
-        indice,
-      ) {
-        Ok(destino) ->
-          executar_acao(tela, jogo.Ir(destino))
-
-        Error(_) -> tela
+      case list.drop(jogo.sala_atual(tela.estado).saidas, indice) {
+        [destino, ..] -> executar_acao(tela, jogo.Ir(destino))
+        [] -> tela
       }
 
     _ -> tela
