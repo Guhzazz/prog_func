@@ -192,6 +192,29 @@ pub fn gerador_painel_examples() {
     100,
   )
 
+
+  check.eq(
+    tem_item(
+      interagir(painel(), iluminado).1,
+      "energia restaurada",
+    ),
+    False,
+  )
+
+  let com_cracha = adicionar_item(
+    iluminado,
+    "crachá",
+  )
+
+  check.eq(
+    tem_item(
+      interagir(painel(), com_cracha).1,
+      "energia restaurada",
+    ),
+    False,
+  )
+
+
   let preparado = adicionar_item(
     adicionar_item(iluminado, "crachá"),
     "gerador ligado",
