@@ -390,7 +390,6 @@ fn executar_acao(
   )
 
   Tela(
-    ..tela,
     estado: resultado.0,
     pagina: "principal",
     digitado: "",
