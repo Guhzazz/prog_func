@@ -8,7 +8,9 @@ import jogo
 import sgleam/check
 import sgleam/fill
 import sgleam/image
+import sgleam/key
 import sgleam/world
+
 
 pub type Tela {
   Tela(
@@ -65,6 +67,75 @@ fn escrever_destaque(
 }
 
 // Divide mensagens grandes em até cinco trechos.
+// Quebra um texto em várias linhas sem cortar palavras.
+fn separar_linhas(
+  palavras: List(String),
+  atual: String,
+  acumuladas: List(String),
+  limite: Int,
+) -> List(String) {
+  case palavras {
+    [] ->
+      case atual {
+        "" -> list.reverse(acumuladas)
+        _ -> list.reverse([atual, ..acumuladas])
+      }
+
+    [palavra, ..resto] -> {
+      let candidato = case atual {
+        "" -> palavra
+        _ -> atual <> " " <> palavra
+      }
+
+      case string.length(candidato) > limite && atual != "" {
+        True ->
+          separar_linhas(
+            resto,
+            palavra,
+            [atual, ..acumuladas],
+            limite,
+          )
+
+        False ->
+          separar_linhas(
+            resto,
+            candidato,
+            acumuladas,
+            limite,
+          )
+      }
+    }
+  }
+}
+
+// Prepara o texto para ser quebrado em linhas.
+fn texto_em_linhas(
+  texto: String,
+  limite: Int,
+) -> List(String) {
+  let limpo = string.replace(texto, "\n", " ")
+  separar_linhas(string.split(limpo, " "), "", [], limite)
+}
+
+// Desenha uma lista de linhas na tela.
+fn desenhar_linhas(
+  cena: image.Image,
+  linhas_texto: List(String),
+  x: Int,
+  y: Int,
+  restantes: Int,
+) -> image.Image {
+  case linhas_texto {
+    [linha, ..resto] if restantes > 0 -> {
+      let cena = escrever(cena, linha, x, y, 15)
+      desenhar_linhas(cena, resto, x, y + 22, restantes - 1)
+    }
+
+    _ -> cena
+  }
+}
+
+// Desenha a mensagem quebrando por palavras, e não no meio delas.
 fn mensagem_em_linhas(
   cena: image.Image,
   texto: String,
@@ -72,35 +143,13 @@ fn mensagem_em_linhas(
   y: Int,
   linhas: Int,
 ) -> image.Image {
-  case linhas <= 0 || string.length(texto) == 0 {
-    True -> cena
-
-    False -> {
-      let primeira = string.slice(texto, 0, 73)
-
-      let resto = string.slice(
-        texto,
-        73,
-        string.length(texto),
-      )
-
-      let cena = escrever(
-        cena,
-        string.replace(primeira, "\n", " "),
-        x,
-        y,
-        15,
-      )
-
-      mensagem_em_linhas(
-        cena,
-        resto,
-        x,
-        y + 22,
-        linhas - 1,
-      )
-    }
-  }
+  desenhar_linhas(
+    cena,
+    texto_em_linhas(texto, 66),
+    x,
+    y,
+    linhas,
+  )
 }
 
 // Devolve as opções conforme a página atual.
@@ -465,12 +514,12 @@ fn indice_da_tecla(tecla: String) -> Result(Int, Nil) {
 // Recebe o estado e uma tecla, devolvendo a nova tela.
 pub fn tratar_tecla(
   tela: Tela,
-  tecla: world.Key,
+  tecla: key.Event,
 ) -> Tela {
   case tela.pagina {
     "introducao" ->
       case tecla {
-        world.Enter ->
+        key.Enter ->
           Tela(
             ..tela,
             pagina: "principal",
@@ -482,14 +531,14 @@ pub fn tratar_tecla(
 
     "resposta" ->
       case tecla {
-        world.Escape ->
+        key.Escape ->
           Tela(
             ..tela,
             pagina: "principal",
             digitado: "",
           )
 
-        world.Backspace ->
+        key.Backspace ->
           case string.length(tela.digitado) > 0 {
             True ->
               Tela(
@@ -504,7 +553,7 @@ pub fn tratar_tecla(
             False -> tela
           }
 
-        world.Enter ->
+        key.Enter ->
           case string.trim(tela.digitado) {
             "" ->
               Tela(
@@ -519,7 +568,7 @@ pub fn tratar_tecla(
               )
           }
 
-        world.Char(caractere) ->
+        key.Char(caractere) ->
           case string.length(tela.digitado) < 8 {
             True ->
               Tela(
@@ -535,13 +584,13 @@ pub fn tratar_tecla(
 
     _ ->
       case tecla {
-        world.Escape ->
+        key.Escape ->
           Tela(
             ..tela,
             pagina: "principal",
           )
 
-        world.Char(caractere) ->
+        key.Char(caractere) ->
           case indice_da_tecla(caractere) {
             Ok(indice) ->
               selecionar(tela, indice)
@@ -555,10 +604,9 @@ pub fn tratar_tecla(
 }
 
 // Ponto de entrada da interface gráfica.
-pub fn main() {
+pub fn smain() {
   world.create(iniciar(), desenhar)
   |> world.on_key_down(tratar_tecla)
-  |> world.run()
 }
 
 // Exemplos para testar os comandos básicos.
@@ -569,21 +617,21 @@ pub fn visual_examples() {
 
   let principal = tratar_tecla(
     intro,
-    world.Enter,
+    key.Enter,
   )
 
   check.eq(principal.pagina, "principal")
 
   let objetos = tratar_tecla(
     principal,
-    world.Char("4"),
+    key.Char("4"),
   )
 
   check.eq(objetos.pagina, "objetos")
 
   let depois = tratar_tecla(
     objetos,
-    world.Char("1"),
+    key.Char("1"),
   )
 
   check.eq(depois.pagina, "principal")
@@ -596,3 +644,35 @@ pub fn visual_examples() {
     True,
   )
 }
+
+
+
+pub fn interacao_examples() {
+  let inicial = iniciar()
+  check.eq(inicial.pagina, "introducao")
+
+  let partida = tratar_tecla(inicial, key.Enter)
+  check.eq(partida.pagina, "principal")
+
+  let objetos = tratar_tecla(partida, key.Char("4"))
+  check.eq(objetos.pagina, "objetos")
+
+  let voltou = tratar_tecla(objetos, key.Escape)
+  check.eq(voltou.pagina, "principal")
+
+  let resposta = tratar_tecla(voltou, key.Char("6"))
+  check.eq(resposta.pagina, "resposta")
+
+  let digitando = tratar_tecla(resposta, key.Char("1"))
+  check.eq(digitando.digitado, "1")
+
+  let apagou = tratar_tecla(digitando, key.Backspace)
+  check.eq(apagou.digitado, "")
+
+  let vazia = tratar_tecla(apagou, key.Enter)
+  check.eq(
+    vazia.mensagem,
+    "Digite alguma resposta antes de confirmar.",
+  )
+}
+
