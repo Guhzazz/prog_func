@@ -76,6 +76,7 @@ depois disso, nenhuma ação altera o estado.
 
 - `Ir("Sala 3")` antes de resolver a Trava do Corredor: "O acesso a Sala 3 está bloqueado."
 - `Usar("painel")` sem o crachá: choque, perde 10 de vida e o painel continua apagado.
+- Na Sala 3, o painel precisa estar ligado para aceitar a sequência do gerador. Use `Explorar` para verificar se ele está `[apagado]` ou `[ligado]`.
 - `Usar("porta de emergência")` antes do terminal: nada acontece, a porta continua trancada.
 - Resposta errada: "Resposta incorreta." e o estado não muda.
 - Usar um objeto já usado: "Você já usou ..." (o item não é duplicado).
