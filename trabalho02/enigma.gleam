@@ -48,26 +48,41 @@ pub fn verificar_resposta_examples() {
   check.eq(verificar_resposta(e, "a10"), False)
 }
 
-/// Tenta resolver o enigma de forma pura.
-/// Se já estiver resolvido ou a resposta estiver correta, retorna o enigma
-/// com status Resolvido, o jogador atualizado pelo efeito e True.
-/// Caso contrário, mantém o estado anterior e retorna False.
+const nome_sequencia_gerador = "Sequência do Gerador"
+
+/// Resolve o enigma ou explica por que a tentativa falhou.
+pub fn resolver_com_mensagem(
+  enigma: Enigma,
+  resposta: String,
+  jogador: Jogador,
+) -> Result(#(Enigma, Jogador), String) {
+  case enigma.status {
+    Resolvido -> Ok(#(enigma, jogador))
+    Pendente -> {
+      let sem_energia =
+        enigma.nome == nome_sequencia_gerador
+        && !tem_item(jogador, "energia restaurada")
+      case sem_energia, verificar_resposta(enigma, resposta) {
+        True, _ -> Error("Ligue o painel do gerador antes de informar o código.")
+        False, False -> Error("Resposta incorreta.")
+        False, True -> Ok(#(
+          Enigma(..enigma, status: Resolvido),
+          enigma.efeito(jogador),
+        ))
+      }
+    }
+  }
+}
+
+/// Devolve o enigma, o jogador e um indicador de sucesso.
 pub fn tentar_resolver(
   enigma: Enigma,
   resposta: String,
   jogador: Jogador,
 ) -> #(Enigma, Jogador, Bool) {
-  case enigma.status {
-    Resolvido -> #(enigma, jogador, True)
-    Pendente ->
-      case verificar_resposta(enigma, resposta) {
-        True -> #(
-          Enigma(..enigma, status: Resolvido),
-          enigma.efeito(jogador),
-          True,
-        )
-        False -> #(enigma, jogador, False)
-      }
+  case resolver_com_mensagem(enigma, resposta, jogador) {
+    Ok(#(resolvido, atualizado)) -> #(resolvido, atualizado, True)
+    Error(_) -> #(enigma, jogador, False)
   }
 }
 
@@ -101,8 +116,13 @@ pub fn resolver_enigma(
 pub fn resolver_enigma_examples() {
   let j = novo_jogador("Ana", "Sala 3")
   let e = enigma_sequencia_gerador()
-  check.eq(tem_item(resolver_enigma(e, "000", j), "codigo evacuacao"), False)
-  check.eq(tem_item(resolver_enigma(e, "312", j), "codigo evacuacao"), True)
+  check.eq(resolver_enigma(e, "312", j), j)
+  let com_energia = adicionar_item(j, "energia restaurada")
+  check.eq(resolver_enigma(e, "000", com_energia), com_energia)
+  check.eq(
+    tem_item(resolver_enigma(e, "312", com_energia), "codigo evacuacao"),
+    True,
+  )
 }
 
 /// Formata recursivamente uma lista de pistas em uma única String numerada.
@@ -172,7 +192,7 @@ pub fn enigma_trava_corredor() -> Enigma {
 /// Enigma 2: combina as pistas do registro e da planta para gerar o código de saída.
 pub fn enigma_sequencia_gerador() -> Enigma {
   Enigma(
-    nome: "Sequência do Gerador",
+    nome: nome_sequencia_gerador,
     descricao: "Informe o código de segurança formado pelo número da sala do gerador seguido do número da porta técnica.",
     solucao: "312",
     pistas: [
