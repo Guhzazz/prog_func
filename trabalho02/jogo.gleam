@@ -181,10 +181,9 @@ fn aplicar(estado: Estado, acao: Acao) -> #(Estado, String) {
     Responder(resposta) ->
       case enigma_pendente(sala) {
         Error(_) -> #(estado, "Nenhum enigma pendente nesta sala.")
-        Ok(e) -> {
-          let #(novo_e, novo_j, ok) = enigma.tentar_resolver(e, resposta, j)
-          case ok {
-            True -> #(
+        Ok(e) ->
+          case enigma.resolver_com_mensagem(e, resposta, j) {
+            Ok(#(novo_e, novo_j)) -> #(
               Estado(
                 novo_j,
                 substituir_sala(
@@ -194,9 +193,8 @@ fn aplicar(estado: Estado, acao: Acao) -> #(Estado, String) {
               ),
               "Correto! " <> e.nome <> " resolvido.",
             )
-            False -> #(estado, "Resposta incorreta.")
+            Error(mensagem) -> #(estado, mensagem)
           }
-        }
       }
   }
 }
@@ -265,6 +263,20 @@ pub fn executar_examples() {
     executar(na_sala3, Usar("painel")).1,
     "Você levou um choque! Vida: 90",
   )
+  check.eq(executar(na_sala3, Responder("312")), #(
+    na_sala3,
+    "Ligue o painel do gerador antes de informar o código.",
+  ))
+  check.eq(executar(na_sala3, Ir("Saída")).0, na_sala3)
+  check.eq(string.contains(executar(na_sala3, Explorar).1, "[apagado]"), True)
+
+  let com_energia = executar_todas(na_sala3, [
+    Ir("Corredor"),
+    Usar("crachá"),
+    Ir("Sala 3"),
+    Usar("painel"),
+  ])
+  check.eq(string.contains(executar(com_energia, Explorar).1, "[ligado]"), True)
 
   // Percurso completo termina em vitória, e depois disso nada muda
   let fim = executar_todas(e, caminho_vitoria())
