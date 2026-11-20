@@ -107,7 +107,7 @@ pub fn cracha() -> Objeto {
 
 /// Painel do gerador (Sala 3).
 pub fn painel() -> Objeto {
-  Objeto("painel", "Painel do gerador, sem energia.", ligar_painel, "intacto")
+  Objeto("painel", "Painel de controle do gerador", ligar_painel, "intacto")
 }
 
 /// Porta de emergência, começa trancada (Saída).
@@ -159,7 +159,12 @@ pub fn interagir_examples() {
 
 /// Texto usado pelo comando "explorar".
 pub fn descrever(objeto: Objeto) -> String {
-  objeto.nome <> ": " <> objeto.descricao <> " [" <> objeto.estado <> "]"
+  let estado = case objeto.nome, objeto.estado {
+    "painel", "intacto" -> "apagado"
+    "painel", "usado" -> "ligado"
+    _, estado -> estado
+  }
+  objeto.nome <> ": " <> objeto.descricao <> " [" <> estado <> "]"
 }
 
 pub fn descrever_examples() {
