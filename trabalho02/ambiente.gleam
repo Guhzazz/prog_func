@@ -185,7 +185,7 @@ pub fn corredor() -> Ambiente {
 pub fn sala_gerador() -> Ambiente {
   Ambiente(
     nome: "Sala 3",
-    descricao: "A sala do gerador auxiliar. O painel de controle está apagado.",
+    descricao: "A sala abriga o gerador auxiliar do hospital.",
     objetos: [objeto.painel()],
     saidas: ["Corredor", "Saída"],
     enigmas: [enigma_sequencia_gerador()],
