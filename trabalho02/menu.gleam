@@ -119,6 +119,45 @@ pub fn exibir_status(estado: Estado) -> Nil {
   io.println(formatar_status(estado))
 }
 
+/// Guarda o estado entre comandos sem imprimir todas as salas no modo interativo.
+pub type Partida {
+  Partida(estado: fn() -> Estado)
+  Encerrada
+}
+
+pub fn iniciar(nome: String) -> Partida {
+  let estado = novo_jogo(nome)
+  display_main_menu()
+  exibir_status(estado)
+  Partida(fn() { estado })
+}
+
+pub fn jogar(partida: Partida, opcao: MainMenu, argumento: String) -> Partida {
+  case partida, opcao {
+    Encerrada, _ -> {
+      io.println("Esta partida já foi encerrada.")
+      Encerrada
+    }
+    Partida(_), Sair -> {
+      io.println("Simulação encerrada pelo jogador.")
+      Encerrada
+    }
+    Partida(estado), _ -> {
+      let proximo = executar_menu(estado(), opcao, argumento)
+      Partida(fn() { proximo })
+    }
+  }
+}
+
+pub fn jogar_examples() {
+  let partida = iniciar("Ana")
+  let assert Partida(estado) = jogar(partida, m5(), "Corredor")
+  check.eq(estado().jogador.localizacao, "Corredor")
+  let encerrada = jogar(partida, exit(), "")
+  check.eq(encerrada, Encerrada)
+  check.eq(jogar(encerrada, m5(), "Corredor"), Encerrada)
+}
+
 /// Executa uma opção do menu sobre o estado atual, exibe a resposta no terminal
 /// e devolve o novo estado do jogo.
 pub fn executar_menu(
@@ -148,6 +187,7 @@ pub fn executar_roteiro(
 ) -> Estado {
   case passos {
     [] -> estado
+    [#(Sair, arg), ..] -> executar_menu(estado, Sair, arg)
     [#(opcao, arg), ..resto] -> {
       let proximo = executar_menu(estado, opcao, arg)
       case situacao(proximo) {
@@ -156,6 +196,11 @@ pub fn executar_roteiro(
       }
     }
   }
+}
+
+pub fn executar_roteiro_examples() {
+  let e = novo_jogo("Ana")
+  check.eq(executar_roteiro(e, [#(exit(), ""), #(m5(), "Corredor")]), e)
 }
 
 /// Roteiro completo de fuga do Hospital no Escuro usando as funções de menu.
@@ -195,17 +240,13 @@ pub fn roteiro_demonstracao_examples() {
   check.eq(sala_atual(final).nome, "Saída")
 }
 
-/// Ponto de entrada para demonstração completa no terminal.
+/// Apresenta o menu e o comando para iniciar uma partida manual.
 pub fn main() -> Nil {
   io.println("==========================================")
   io.println("   ESCAPE ROOM: HOSPITAL NO ESCURO")
   io.println("==========================================")
   display_main_menu()
 
-  let estado_inicial = novo_jogo("Ana")
-  io.println("\nIniciando partida...")
-  exibir_status(estado_inicial)
-
-  let _estado_final = executar_roteiro(estado_inicial, roteiro_demonstracao())
-  io.println("\n==========================================")
+  io.println("\nPara jogar, execute sgleam -i menu.gleam e digite:")
+  io.println("let p = iniciar(\"Ana\")")
 }
