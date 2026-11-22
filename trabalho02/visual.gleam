@@ -2,7 +2,9 @@
 //// Interface gráfica do Hospital no Escuro.
 //// Todas as regras continuam no módulo jogo.
 
+import gleam/bit_array
 import gleam/list
+import gleam/result
 import gleam/string
 import jogo
 import sgleam/check
@@ -38,7 +40,7 @@ fn escrever(
   y: Int,
   tamanho: Int,
 ) -> image.Image {
-  let frase = image.text(conteudo, tamanho, fill.white)
+  let frase = image.text(conteudo, tamanho, fill.rgb(24, 48, 50))
 
   image.place_image(
     cena,
@@ -56,7 +58,7 @@ fn escrever_destaque(
   y: Int,
   tamanho: Int,
 ) -> image.Image {
-  let frase = image.text(conteudo, tamanho, fill.gold)
+  let frase = image.text(conteudo, tamanho, fill.rgb(11, 91, 86))
 
   image.place_image(
     cena,
@@ -109,12 +111,12 @@ fn separar_linhas(
 }
 
 // Prepara o texto para ser quebrado em linhas.
-fn texto_em_linhas(
-  texto: String,
-  limite: Int,
-) -> List(String) {
-  let limpo = string.replace(texto, "\n", " ")
-  separar_linhas(string.split(limpo, " "), "", [], limite)
+fn texto_em_linhas(texto: String, limite: Int) -> List(String) {
+  texto
+  |> string.split("\n")
+  |> list.flat_map(fn(linha) {
+    separar_linhas(string.split(linha, " "), "", [], limite)
+  })
 }
 
 // Desenha uma lista de linhas na tela.
@@ -127,7 +129,7 @@ fn desenhar_linhas(
 ) -> image.Image {
   case linhas_texto {
     [linha, ..resto] if restantes > 0 -> {
-      let cena = escrever(cena, linha, x, y, 15)
+      let cena = escrever(cena, linha, x, y, 16)
       desenhar_linhas(cena, resto, x, y + 22, restantes - 1)
     }
 
@@ -145,7 +147,7 @@ fn mensagem_em_linhas(
 ) -> image.Image {
   desenhar_linhas(
     cena,
-    texto_em_linhas(texto, 66),
+    texto_em_linhas(texto, 94),
     x,
     y,
     linhas,
@@ -280,6 +282,14 @@ fn desenhar_introducao(cena: image.Image) -> image.Image {
   )
 }
 
+fn situacao_texto(estado: jogo.Estado) -> String {
+  case jogo.situacao(estado) {
+    jogo.EmAndamento -> "Em andamento"
+    jogo.Vitoria -> "Vitória"
+    jogo.Derrota -> "Derrota"
+  }
+}
+
 // Função que desenha toda a interface.
 pub fn desenhar(tela: Tela) -> image.Image {
   let cena = image.rectangle(
@@ -290,9 +300,9 @@ pub fn desenhar(tela: Tela) -> image.Image {
 
   let cena = image.place_image(
     cena,
-    450,
-    47,
-    image.rectangle(865, 68, fill.darkslategray),
+    865,
+    68,
+    image.rectangle(865, 68, fill.rgb(199, 240, 232)),
   )
 
   let cena = escrever_destaque(
@@ -313,7 +323,7 @@ pub fn desenhar(tela: Tela) -> image.Image {
       let vida =
         string.inspect(tela.estado.jogador.pontos_de_vida)
 
-      let situacao = case jogo.situacao(tela.estado) {
+      let situacao = situacao_texto(tela.estado) {
         jogo.EmAndamento -> "EM ANDAMENTO"
         jogo.Vitoria -> "VITÓRIA"
         jogo.Derrota -> "DERROTA"
@@ -347,7 +357,7 @@ pub fn desenhar(tela: Tela) -> image.Image {
         cena,
         450,
         248,
-        image.rectangle(862, 160, fill.darkslategray),
+        image.rectangle(862, 216, fill.rgb(229, 248, 244)),
       )
 
       let cena = escrever_destaque(
@@ -363,7 +373,7 @@ pub fn desenhar(tela: Tela) -> image.Image {
         tela.mensagem,
         45,
         226,
-        5,
+        8,
       )
 
       let cena = case tela.pagina {
@@ -372,7 +382,7 @@ pub fn desenhar(tela: Tela) -> image.Image {
             cena,
             "DIGITE SUA RESPOSTA",
             45,
-            367,
+            423,
             20,
           )
 
@@ -380,7 +390,7 @@ pub fn desenhar(tela: Tela) -> image.Image {
             cena,
             tela.digitado <> "_",
             60,
-            430,
+            480,
             25,
           )
 
@@ -404,7 +414,7 @@ pub fn desenhar(tela: Tela) -> image.Image {
             cena,
             titulo,
             45,
-            359,
+            423,
             20,
           )
 
@@ -412,18 +422,22 @@ pub fn desenhar(tela: Tela) -> image.Image {
             cena,
             opcoes(tela),
             1,
-            405,
+            469,
           )
         }
       }
 
-      escrever(
-        cena,
-        "TECLAS 1-7: escolher | ESC: menu principal",
-        42,
-        674,
-        15,
-      )
+      case tela.pagina {
+        "resposta" -> cena
+        _ ->
+          escrever(
+            cena,
+            "1 a 7 para escolher  •  Esc para voltar",
+            42,
+            790,
+            16,
+          )
+      }
     }
   }
 }
