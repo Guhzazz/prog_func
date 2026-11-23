@@ -115,7 +115,7 @@ pub fn resolver_enigma(
 }
 
 pub fn resolver_enigma_examples() {
-  let j = novo_jogador("Ana", "Sala 3")
+  let j = adicionar_item(novo_jogador("Ana", "Sala 3"), "energia restaurada")
   let e = enigma_sequencia_gerador()
   check.eq(tem_item(resolver_enigma(e, "000", j), "codigo evacuacao"), False)
   check.eq(tem_item(resolver_enigma(e, "347", j), "codigo evacuacao"), True)
