@@ -1,11 +1,12 @@
 //// Módulo menu — camada de apresentação do simulador Hospital no Escuro.
-//// Concentra a exibição no terminal (gleam/io), os tipos soma de navegação
+//// Concentra a exibição no terminal (echo), os tipos soma de navegação
 //// e as funções nomeadas (m1, m2, ..., exit).
 
+import gleam/list
+import sgleam/env.{type Env}
 import configuracao
 import gleam/string
 import gleam/int
-import gleam/io
 import jogo.{
   type Acao, type Estado, Derrota, EmAndamento, Vitoria, executar, novo_jogo,
   sala_atual, situacao,
@@ -23,16 +24,21 @@ pub type MainMenu {
   Sair
 }
 
+fn mostrar(texto: String) -> Nil {
+  echo texto
+  Nil
+}
+
 /// Exibe as opções disponíveis no menu principal.
 pub fn display_main_menu() -> Nil {
-  io.println("\n--- MENU PRINCIPAL (HOSPITAL NO ESCURO) ---")
-  io.println("m1(): Explorar ambiente atual")
-  io.println("m2(): Consultar inventário")
-  io.println("m3(): Examinar enigmas da sala")
-  io.println("m4(): Usar ou coletar objeto")
-  io.println("m5(): Mover para outra sala")
-  io.println("m6(): Responder enigma")
-  io.println("exit(): Encerrar simulação")
+  mostrar("\n--- MENU PRINCIPAL (HOSPITAL NO ESCURO) ---")
+  mostrar("m1(): Explorar ambiente atual")
+  mostrar("m2(): Consultar inventário")
+  mostrar("m3(): Examinar enigmas da sala")
+  mostrar("m4(): Usar ou coletar objeto")
+  mostrar("m5(): Mover para outra sala")
+  mostrar("m6(): Responder enigma")
+  mostrar("exit(): Encerrar simulação")
 }
 
 // Funções nomeadas para seleção de opções no menu funcional.
@@ -117,7 +123,7 @@ pub fn formatar_status_examples() {
 
 /// Exibe o status atual do jogador no terminal.
 pub fn exibir_status(estado: Estado) -> Nil {
-  io.println(formatar_status(estado))
+  mostrar(formatar_status(estado))
 }
 
 /// Executa uma opção do menu sobre o estado atual, exibe a resposta no terminal
@@ -129,12 +135,12 @@ pub fn executar_menu(
 ) -> Estado {
   case opcao_para_acao(opcao, argumento) {
     Error(Nil) -> {
-      io.println("Simulação encerrada pelo jogador.")
+      mostrar("Simulação encerrada pelo jogador.")
       estado
     }
     Ok(acao) -> {
       let #(novo_estado, mensagem) = executar(estado, acao)
-      io.println("\n> " <> mensagem)
+      mostrar("\n> " <> mensagem)
       exibir_status(novo_estado)
       novo_estado
     }
@@ -153,7 +159,7 @@ pub fn executar_roteiro(
     [acao, ..resto] -> {
       let resultado = executar(estado, acao)
 
-      io.println("\n> " <> resultado.1)
+      mostrar("\n> " <> resultado.1)
       exibir_status(resultado.0)
 
       case situacao(resultado.0) {
@@ -221,25 +227,113 @@ pub fn roteiro_demonstracao_examples() {
 
 /// Ponto de entrada para demonstração completa no terminal.
 pub fn main() -> Nil {
-  io.println("==========================================")
-  io.println("   ESCAPE ROOM: HOSPITAL NO ESCURO")
-  io.println("==========================================")
+  mostrar("==========================================")
+  mostrar("   ESCAPE ROOM: HOSPITAL NO ESCURO")
+  mostrar("==========================================")
 
-  io.println("")
-  io.println("Um apagão atingiu o hospital!")
-  io.println("Você pertence à equipe de manutenção.")
-  io.println("A sala de Manutenção ficou trancada.")
-  io.println("Encontre uma chave, procure pistas e restaure a energia.")
-  io.println("Cuidado: caminhar pelo Corredor sem lanterna é perigoso.")
-  io.println("Seu objetivo é liberar a porta magnética de emergência.")
-  io.println("")
+  mostrar("")
+  mostrar("Um apagão atingiu o hospital!")
+  mostrar("Você pertence à equipe de manutenção.")
+  mostrar("A sala de Manutenção ficou trancada.")
+  mostrar("Encontre uma chave, procure pistas e restaure a energia.")
+  mostrar("Cuidado: caminhar pelo Corredor sem lanterna é perigoso.")
+  mostrar("Seu objetivo é liberar a porta magnética de emergência.")
+  mostrar("")
 
   display_main_menu()
 
   let estado_inicial = novo_jogo("Ana")
-  io.println("\nIniciando partida...")
+  mostrar("\nIniciando partida...")
   exibir_status(estado_inicial)
 
   let _estado_final = executar_roteiro(estado_inicial, roteiro_demonstracao())
-  io.println("\n==========================================")
+  mostrar("\n==========================================")
+}
+/// Guarda o estado em uma função para o REPL não imprimir os enigmas.
+pub fn iniciar(nome: String) -> fn() -> Estado {
+  let estado = novo_jogo(nome)
+  fn() { estado }
+}
+
+pub fn jogar(partida: fn() -> Estado, opcao: MainMenu, argumento: String) -> fn() -> Estado {
+  case opcao_para_acao(opcao, argumento) {
+    Error(_) -> partida
+    Ok(acao) -> {
+      let resultado = executar(partida(), acao)
+      mostrar(resultado.1)
+      let estado = resultado.0
+      fn() { estado }
+    }
+  }
+}
+
+type Etapa {
+  Principal
+  Objetos
+  Destinos
+  Resposta
+}
+
+type Turno {
+  Turno(estado: Estado, etapa: Etapa, mensagem: String)
+}
+
+fn itens(estado: Estado, etapa: Etapa) -> List(String) {
+  let sala = sala_atual(estado)
+  case etapa {
+    Objetos -> list.map(sala.objetos, fn(objeto) { objeto.nome })
+    Destinos -> sala.saidas
+    _ -> []
+  }
+}
+
+fn agir(estado: Estado, acao: Acao) -> Turno {
+  let resultado = executar(estado, acao)
+  Turno(resultado.0, Principal, resultado.1)
+}
+
+fn escolher(t: Turno, entrada: String) -> Turno {
+  case t.etapa, string.trim(entrada) {
+    _, "0" -> Turno(t.estado, Principal, "")
+    Principal, "1" -> agir(t.estado, jogo.Explorar)
+    Principal, "2" -> agir(t.estado, jogo.Inventario)
+    Principal, "3" -> agir(t.estado, jogo.Enigmas)
+    Principal, "4" -> Turno(t.estado, Objetos, "")
+    Principal, "5" -> Turno(t.estado, Destinos, "")
+    Principal, "6" -> Turno(t.estado, Resposta, "")
+    Resposta, "" -> Turno(..t, mensagem: "Digite uma resposta.")
+    Resposta, texto -> agir(t.estado, jogo.Responder(texto))
+    Principal, _ -> Turno(..t, mensagem: "Escolha um número do menu.")
+    etapa, numero -> {
+      let opcoes = itens(t.estado, etapa)
+      case int.parse(numero) {
+        Ok(n) if n > 0 -> case list.drop(opcoes, n - 1) {
+          [nome, ..] -> case etapa {
+            Objetos -> agir(t.estado, jogo.Usar(nome))
+            _ -> agir(t.estado, jogo.Ir(nome))
+          }
+          [] -> Turno(..t, mensagem: "Opção inválida.")
+        }
+        _ -> Turno(..t, mensagem: "Opção inválida.")
+      }
+    }
+  }
+}
+
+pub fn smain(contexto: Env) -> String {
+  let inicio = Turno(novo_jogo("Eu"), Principal, "Um apagão trancou você na Manutenção. Encontre uma saída.")
+  let t = list.fold(env.args(contexto), inicio, escolher)
+  let opcoes = case situacao(t.estado), t.etapa {
+    EmAndamento, Principal -> "1. Explorar a sala\n2. Ver inventário\n3. Consultar pistas\n4. Usar objeto\n5. Mudar de sala\n6. Responder enigma"
+    EmAndamento, Resposta -> "Digite a resposta do enigma (0 para voltar)."
+    EmAndamento, etapa -> {
+      let lista = list.index_map(itens(t.estado, etapa), fn(nome, i) {
+        int.to_string(i + 1) <> ". " <> nome
+      })
+      string.join(lista, "\n") <> "\n0. Voltar"
+    }
+    _, _ -> "Fim da partida."
+  }
+  "HOSPITAL NO ESCURO\n" <> formatar_status(t.estado) <> "\n\n" <> t.mensagem
+  <> "\n\n" <> opcoes <> "\nq. Sair"
 }
