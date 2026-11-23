@@ -291,7 +291,6 @@ pub fn interagir(objeto: Objeto, jogador: Jogador)-> #(Objeto, Jogador){
             }
         }
     }
-  }
 }
 
 pub fn interagir_examples() {
