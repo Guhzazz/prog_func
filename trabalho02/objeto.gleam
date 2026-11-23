@@ -2,16 +2,20 @@ import configuracao
 import jogador.{type Jogador, adicionar_item, perder_vida, tem_item}
 import sgleam/check
 
-pub type Objeto{
-    Objeto(
+/// Objeto de uma sala; `interacao` é aplicada ao jogador quando ele usa o objeto
+/// e `estado` indica se ele está "intacto", "trancada" ou "usado".
+pub type Objeto {
+  Objeto(
     nome: String,
     descricao: String,
-    interacao : fn(Jogador) -> Jogador,
-    estado: String)
+    interacao: fn(Jogador) -> Jogador,
+    estado: String,
+  )
 }
 
-// INterações possíveis (funções puras)
+// Interações possíveis (funções puras)
 
+/// Coloca a chave de manutenção no inventário.
 fn pegar_chave(jogador: Jogador) -> Jogador {
   adicionar_item(jogador, "chave de manutenção")
 }
@@ -33,10 +37,12 @@ fn ler_registro(jogador: Jogador) -> Jogador {
   )
 }
 
+/// Coloca a lanterna no inventário.
 fn pegar_lanterna(jogador: Jogador) -> Jogador {
   adicionar_item(jogador, "lanterna")
 }
 
+/// Coloca o crachá no inventário (protege do choque do painel).
 fn pegar_cracha(jogador: Jogador) -> Jogador {
   adicionar_item(jogador, "crachá")
 }
@@ -85,26 +91,51 @@ fn abrir_porta(jogador: Jogador) -> Jogador {
   }
 }
 
-// Descrição dos objetos do hospital(funções fn() -> Jogador ainda não implementadas)
+// Objetos do hospital
 
+/// Chave de manutenção (sala Manutenção).
 pub fn chave() -> Objeto {
-  Objeto("chave", "Uma chave de manutenção pendurada no quadro", pegar_chave, "intacto")
+  Objeto(
+    "chave",
+    "Uma chave de manutenção pendurada no quadro",
+    pegar_chave,
+    "intacto",
+  )
 }
 
-pub fn planta() -> Objeto{
-    Objeto("planta", "Uma planta do hospital com um código rabiscado", ler_planta, "intacto")
+/// Planta do prédio com o código da porta técnica (sala Manutenção).
+pub fn planta() -> Objeto {
+  Objeto(
+    "planta",
+    "Uma planta do hospital com um código rabiscado",
+    ler_planta,
+    "intacto",
+  )
 }
 
+/// Registro de falhas que indica a sala do gerador (sala Manutenção).
 pub fn registro() -> Objeto {
-  Objeto("registro", "Registro de falhas dos equipamentos.", ler_registro, "intacto")
+  Objeto(
+    "registro",
+    "Registro de falhas dos equipamentos.",
+    ler_registro,
+    "intacto",
+  )
 }
 
-pub fn lanterna() -> Objeto{
-    Objeto("lanterna", "Uma lanterna caída no chão", pegar_lanterna, "intacto")
+/// Lanterna (sala Manutenção).
+pub fn lanterna() -> Objeto {
+  Objeto("lanterna", "Uma lanterna caída no chão", pegar_lanterna, "intacto")
 }
 
+/// Crachá do técnico de plantão (Corredor).
 pub fn cracha() -> Objeto {
-  Objeto("crachá", "Crachá de acesso do técnico de plantão.", pegar_cracha, "intacto")
+  Objeto(
+    "crachá",
+    "Crachá de acesso do técnico de plantão.",
+    pegar_cracha,
+    "intacto",
+  )
 }
 
 
@@ -128,8 +159,14 @@ pub fn painel() -> Objeto {
   )
 }
 
+/// Porta de emergência, começa trancada (Saída).
 pub fn porta_emergencia() -> Objeto {
-  Objeto("porta de emergência", "Porta da saída de evacuação, trancada.", abrir_porta, "trancada")
+  Objeto(
+    "porta de emergência",
+    "Porta da saída de evacuação, trancada.",
+    abrir_porta,
+    "trancada",
+  )
 }
 
 
@@ -254,6 +291,7 @@ pub fn interagir(objeto: Objeto, jogador: Jogador)-> #(Objeto, Jogador){
             }
         }
     }
+  }
 }
 
 pub fn interagir_examples() {
@@ -267,7 +305,12 @@ pub fn interagir_examples() {
 
 /// Texto usado pelo comando "explorar".
 pub fn descrever(objeto: Objeto) -> String {
-  objeto.nome <> ": " <> objeto.descricao <> " [" <> objeto.estado <> "]"
+  let estado = case objeto.nome, objeto.estado {
+    "painel", "intacto" -> "apagado"
+    "painel", "usado" -> "ligado"
+    _, estado -> estado
+  }
+  objeto.nome <> ": " <> objeto.descricao <> " [" <> estado <> "]"
 }
 
 pub fn descrever_examples() {

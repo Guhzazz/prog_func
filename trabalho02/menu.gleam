@@ -126,6 +126,45 @@ pub fn exibir_status(estado: Estado) -> Nil {
   mostrar(formatar_status(estado))
 }
 
+/// Guarda o estado entre comandos sem imprimir todas as salas no modo interativo.
+pub type Partida {
+  Partida(estado: fn() -> Estado)
+  Encerrada
+}
+
+pub fn iniciar(nome: String) -> Partida {
+  let estado = novo_jogo(nome)
+  display_main_menu()
+  exibir_status(estado)
+  Partida(fn() { estado })
+}
+
+pub fn jogar(partida: Partida, opcao: MainMenu, argumento: String) -> Partida {
+  case partida, opcao {
+    Encerrada, _ -> {
+      io.println("Esta partida já foi encerrada.")
+      Encerrada
+    }
+    Partida(_), Sair -> {
+      io.println("Simulação encerrada pelo jogador.")
+      Encerrada
+    }
+    Partida(estado), _ -> {
+      let proximo = executar_menu(estado(), opcao, argumento)
+      Partida(fn() { proximo })
+    }
+  }
+}
+
+pub fn jogar_examples() {
+  let partida = iniciar("Ana")
+  let assert Partida(estado) = jogar(partida, m5(), "Corredor")
+  check.eq(estado().jogador.localizacao, "Corredor")
+  let encerrada = jogar(partida, exit(), "")
+  check.eq(encerrada, Encerrada)
+  check.eq(jogar(encerrada, m5(), "Corredor"), Encerrada)
+}
+
 /// Executa uma opção do menu sobre o estado atual, exibe a resposta no terminal
 /// e devolve o novo estado do jogo.
 pub fn executar_menu(
