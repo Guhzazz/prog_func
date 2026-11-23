@@ -142,11 +142,11 @@ pub fn iniciar(nome: String) -> Partida {
 pub fn jogar(partida: Partida, opcao: MainMenu, argumento: String) -> Partida {
   case partida, opcao {
     Encerrada, _ -> {
-      io.println("Esta partida já foi encerrada.")
+      mostrar("Esta partida já foi encerrada.")
       Encerrada
     }
     Partida(_), Sair -> {
-      io.println("Simulação encerrada pelo jogador.")
+      mostrar("Simulação encerrada pelo jogador.")
       Encerrada
     }
     Partida(estado), _ -> {
@@ -158,7 +158,8 @@ pub fn jogar(partida: Partida, opcao: MainMenu, argumento: String) -> Partida {
 
 pub fn jogar_examples() {
   let partida = iniciar("Ana")
-  let assert Partida(estado) = jogar(partida, m5(), "Corredor")
+  let com_chave = jogar(partida, m4(), "chave")
+  let assert Partida(estado) = jogar(com_chave, m5(), "Corredor")
   check.eq(estado().jogador.localizacao, "Corredor")
   let encerrada = jogar(partida, exit(), "")
   check.eq(encerrada, Encerrada)
@@ -288,24 +289,6 @@ pub fn main() -> Nil {
   let _estado_final = executar_roteiro(estado_inicial, roteiro_demonstracao())
   mostrar("\n==========================================")
 }
-/// Guarda o estado em uma função para o REPL não imprimir os enigmas.
-pub fn iniciar(nome: String) -> fn() -> Estado {
-  let estado = novo_jogo(nome)
-  fn() { estado }
-}
-
-pub fn jogar(partida: fn() -> Estado, opcao: MainMenu, argumento: String) -> fn() -> Estado {
-  case opcao_para_acao(opcao, argumento) {
-    Error(_) -> partida
-    Ok(acao) -> {
-      let resultado = executar(partida(), acao)
-      mostrar(resultado.1)
-      let estado = resultado.0
-      fn() { estado }
-    }
-  }
-}
-
 type Etapa {
   Principal
   Objetos
