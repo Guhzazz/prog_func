@@ -158,7 +158,7 @@ pub fn buscar_ambiente_examples() {
 pub fn manutencao() -> Ambiente {
   Ambiente(
     nome: "Manutenção",
-    descricao: "A ala de manutenção está às escuras. Só a luz de emergência pisca sobre as bancadas.",
+    descricao: "A Manutenção ficou trancada após o apagão. Procure a chave antes de tentar o Corredor.",    
     objetos: [
       objeto.lanterna(),
       objeto.chave(),
@@ -174,7 +174,7 @@ pub fn manutencao() -> Ambiente {
 pub fn corredor() -> Ambiente {
   Ambiente(
     nome: "Corredor",
-    descricao: "Um corredor longo com uma porta travada por um visor de emergência.",
+    descricao: "O Corredor está escuro e cheio de obstáculos, cuidado para não tropeçar. A trava da Sala 3 pede uma senha. ",
     objetos: [objeto.cracha()],
     saidas: ["Manutenção", "Sala 3"],
     enigmas: [enigma_trava_corredor()],
@@ -185,8 +185,11 @@ pub fn corredor() -> Ambiente {
 pub fn sala_gerador() -> Ambiente {
   Ambiente(
     nome: "Sala 3",
-    descricao: "A sala abriga o gerador auxiliar do hospital.",
-    objetos: [objeto.painel()],
+    descricao: "Na Sala 3 há um gerador desligado e um painel elétrico. Ative-os na ordem correta.",
+    objetos: [
+      objeto.gerador(),
+      objeto.painel(),
+    ],
     saidas: ["Corredor", "Saída"],
     enigmas: [enigma_sequencia_gerador()],
   )

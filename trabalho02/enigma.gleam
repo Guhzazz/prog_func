@@ -1,6 +1,7 @@
 //// Módulo enigma — define os tipos algébricos de enigmas, funções puras
 //// de resolução e consulta de pistas, além dos desafios do Hospital no Escuro.
 
+import configuracao
 import gleam/string
 import jogador.{type Jogador, adicionar_item, novo_jogador, tem_item}
 import sgleam/check
@@ -32,7 +33,7 @@ fn normalizar_texto(texto: String) -> String {
 }
 
 pub fn normalizar_texto_examples() {
-  check.eq(normalizar_texto("  B12 "), "b12")
+  check.eq(normalizar_texto("  B47 "), "b47")
   check.eq(normalizar_texto("Sala 3"), "sala 3")
 }
 
@@ -43,8 +44,8 @@ pub fn verificar_resposta(enigma: Enigma, resposta: String) -> Bool {
 
 pub fn verificar_resposta_examples() {
   let e = enigma_terminal_evacuacao()
-  check.eq(verificar_resposta(e, "b12"), True)
-  check.eq(verificar_resposta(e, "  B12  "), True)
+  check.eq(verificar_resposta(e, "b47"), True)
+  check.eq(verificar_resposta(e, "  B47  "), True)
   check.eq(verificar_resposta(e, "a10"), False)
 }
 
@@ -116,13 +117,8 @@ pub fn resolver_enigma(
 pub fn resolver_enigma_examples() {
   let j = novo_jogador("Ana", "Sala 3")
   let e = enigma_sequencia_gerador()
-  check.eq(resolver_enigma(e, "312", j), j)
-  let com_energia = adicionar_item(j, "energia restaurada")
-  check.eq(resolver_enigma(e, "000", com_energia), com_energia)
-  check.eq(
-    tem_item(resolver_enigma(e, "312", com_energia), "codigo evacuacao"),
-    True,
-  )
+  check.eq(tem_item(resolver_enigma(e, "000", j), "codigo evacuacao"), False)
+  check.eq(tem_item(resolver_enigma(e, "347", j), "codigo evacuacao"), True)
 }
 
 /// Formata recursivamente uma lista de pistas em uma única String numerada.
@@ -181,8 +177,8 @@ pub fn enigma_trava_corredor() -> Enigma {
     descricao: "O visor de emergência pede o número da sala onde está instalado o gerador auxiliar.",
     solucao: "3",
     pistas: [
-      "Consulte o registro de equipamentos na ala de manutenção.",
-      "O gerador fica localizado em uma sala identificada por um único dígito.",
+      "A resposta é a identificação numérica da sala do gerador.",
+      "O registro da Manutenção informa essa identificação. Não há zero à esquerda.",
     ],
     efeito: fn(j) { adicionar_item(j, "acesso corredor") },
     status: Pendente,
@@ -190,31 +186,52 @@ pub fn enigma_trava_corredor() -> Enigma {
 }
 
 /// Enigma 2: combina as pistas do registro e da planta para gerar o código de saída.
+
 pub fn enigma_sequencia_gerador() -> Enigma {
   Enigma(
-    nome: nome_sequencia_gerador,
-    descricao: "Informe o código de segurança formado pelo número da sala do gerador seguido do número da porta técnica.",
-    solucao: "312",
+    nome: "Sequência do Gerador",
+
+    descricao: "Informe a sequência de segurança formada pelo número da sala do gerador seguido dos algarismos da identificação da porta técnica.",
+
+    solucao: "3" <> string.slice(
+      configuracao.codigo_saida,
+      1,
+      2,
+    ),
+
     pistas: [
-      "O registro aponta o gerador na sala 3.",
-      "A planta do prédio indica a porta técnica B12 (use apenas os dígitos).",
+      "Comece com o número da sala onde o gerador está instalado.",
+      "Complete com os dois algarismos da identificação na planta, sem a letra.",
     ],
-    efeito: fn(j) { adicionar_item(j, "codigo evacuacao") },
+
+    efeito: fn(j) {
+      adicionar_item(j, "codigo evacuacao")
+    },
+
     status: Pendente,
   )
 }
 
+
 /// Enigma 3: destrava a rota final de saída do hospital.
+
 pub fn enigma_terminal_evacuacao() -> Enigma {
   Enigma(
     nome: "Terminal de Saída",
-    descricao: "Digite o código completo da porta técnica indicado na planta do hospital para abrir a saída.",
-    solucao: "b12",
+
+    descricao: "O terminal solicita a identificação completa da porta técnica para autorizar a rota de evacuação.",
+
+    solucao: configuracao.codigo_saida,
+
     pistas: [
-      "Leia a planta do prédio encontrada na ala inicial.",
-      "O código começa com a letra B seguida de dois números.",
+      "Use a identificação alfanumérica registrada na planta, sem remover a letra.",
+      "O código da sequência da Sala 3 usa apenas a parte numérica dessa identificação.",
     ],
-    efeito: fn(j) { adicionar_item(j, "rota liberada") },
+
+    efeito: fn(j) {
+      adicionar_item(j, "rota liberada")
+    },
+
     status: Pendente,
   )
 }

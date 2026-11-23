@@ -2,6 +2,7 @@
 //// atual e devolve um novo estado e a mensagem a exibir (a impressão  vai ficar no menu).
 
 import ambiente.{type Ambiente}
+import configuracao
 import enigma.{type Enigma}
 import gleam/list
 import gleam/string
@@ -42,31 +43,68 @@ pub fn novo_jogo_examples() {
 }
 
 /// Vitória quando a porta de emergência abre; derrota quando a vida acaba.
+
 pub fn situacao(estado: Estado) -> Situacao {
-  case jogador.tem_item(estado.jogador, "porta aberta") {
-    True -> Vitoria
+  case estado.jogador.pontos_de_vida <= 0 {
+    True -> Derrota
+
     False ->
-      case estado.jogador.pontos_de_vida {
-        v if v <= 0 -> Derrota
-        _ -> EmAndamento
+      case ambiente.buscar_ambiente(
+        estado.salas,
+        "Saída",
+      ) {
+        Error(_) -> EmAndamento
+
+        Ok(saida) ->
+          case ambiente.buscar_objeto(
+            saida,
+            "porta de emergência",
+          ) {
+            Ok(porta) if porta.estado == "aberta" ->
+              Vitoria
+
+            _ -> EmAndamento
+          }
       }
   }
 }
 
+
+
 pub fn situacao_examples() {
   let e = novo_jogo("Ana")
+
   check.eq(situacao(e), EmAndamento)
-  check.eq(
-    situacao(Estado(..e, jogador: jogador.perder_vida(e.jogador, 100))),
-    Derrota,
-  )
+
   check.eq(
     situacao(
-      Estado(..e, jogador: jogador.adicionar_item(e.jogador, "porta aberta")),
+      Estado(
+        ..e,
+        jogador: jogador.perder_vida(e.jogador, 100),
+      ),
     ),
-    Vitoria,
+    Derrota,
   )
+
+  let porta_aberta = objeto.Objeto(
+    ..objeto.porta_emergencia(),
+    estado: "aberta",
+  )
+
+  let saida_atualizada =
+    ambiente.atualizar_objeto(
+      ambiente.saida(),
+      porta_aberta,
+    )
+
+  let e2 = Estado(
+    ..e,
+    salas: substituir_sala(e.salas, saida_atualizada),
+  )
+
+  check.eq(situacao(e2), Vitoria)
 }
+
 
 /// Sala onde o jogador está.
 pub fn sala_atual(estado: Estado) -> Ambiente {
@@ -153,62 +191,185 @@ fn aplicar(estado: Estado, acao: Acao) -> #(Estado, String) {
               ambiente.atualizar_objeto(sala, novo_obj),
             )
           let msg = case obj.estado, novo_obj.estado {
-            "usado", _ -> "Você já usou " <> nome <> "."
-            _, "usado" -> "Você usou " <> nome <> "."
+            "usado", _ ->
+              "Você já usou " <> nome <> "."
+
+            "aberta", _ ->
+              "A porta já está aberta."
+
+            _, "aberta" ->
+              "A porta magnética se abriu. Evacuação concluída!"
+
+            _, "usado" ->
+              "Você usou " <> nome <> "."
+
             _, _ ->
               case novo_j.pontos_de_vida < j.pontos_de_vida {
                 True ->
-                  "Você levou um choque! Vida: "
+                  "Choque elétrico de 20 HP! Vida: "
                   <> string.inspect(novo_j.pontos_de_vida)
-                False -> "Nada acontece."
+
+                False ->
+                  case nome {
+                    "gerador" ->
+                      "Sem lanterna, você não consegue ligar o gerador."
+
+                    "painel" ->
+                      case jogador.tem_item(j, "crachá") {
+                        False ->
+                          "O painel exige o crachá de manutenção."
+
+                        True ->
+                          "Ligue o gerador antes de usar o painel."
+                      }
+
+                    "porta de emergência" ->
+                      "Porta bloqueada: é preciso energia, crachá e autorização do terminal."
+
+                    _ -> "Nada acontece."
+                  }
               }
           }
+
           #(Estado(novo_j, salas), msg)
         }
       }
 
+
     Ir(destino) ->
-      case ambiente.tem_saida(sala, destino), requisito(destino) {
-        False, _ -> #(estado, "Não há saída para " <> destino <> ".")
-        True, Ok(item) ->
-          case jogador.tem_item(j, item) {
-            True -> mover(estado, destino)
-            False -> #(estado, "O acesso a " <> destino <> " está bloqueado.")
+      case ambiente.tem_saida(sala, destino) {
+        False ->
+          #(estado, "Não há saída para " <> destino <> ".")
+
+        True ->
+          case sala.nome == "Manutenção"
+            && destino == "Corredor"
+            && !jogador.tem_item(j, "chave de manutenção") {
+
+            True ->
+              #(
+                estado,
+                "A porta da Manutenção está trancada. Encontre a chave.",
+              )
+
+            False ->
+              case requisito(destino) {
+                Error(_) ->
+                  mover(estado, destino)
+
+                Ok(item) ->
+                  case jogador.tem_item(j, item) {
+                    True -> mover(estado, destino)
+
+                    False ->
+                      #(
+                        estado,
+                        "O acesso a " <> destino <> " está bloqueado.",
+                      )
+                  }
+              }
           }
-        True, Error(_) -> mover(estado, destino)
       }
 
+
+    
     Responder(resposta) ->
-      case enigma_pendente(sala) {
-        Error(_) -> #(estado, "Nenhum enigma pendente nesta sala.")
-        Ok(e) ->
-          case enigma.resolver_com_mensagem(e, resposta, j) {
-            Ok(#(novo_e, novo_j)) -> #(
-              Estado(
-                novo_j,
-                substituir_sala(
-                  estado.salas,
-                  ambiente.atualizar_enigma(sala, novo_e),
-                ),
-              ),
-              "Correto! " <> e.nome <> " resolvido.",
-            )
-            Error(mensagem) -> #(estado, mensagem)
+      case sala.nome == "Sala 3"
+        && !jogador.tem_item(j, "energia restaurada") {
+
+        True ->
+          #(
+            estado,
+            "Restaure a energia antes de resolver a sequência.",
+          )
+
+        False ->
+          case sala.nome == "Sala 3"
+            && !jogador.tem_item(
+              j,
+              "pista: porta técnica " <> configuracao.codigo_saida,
+            ) {
+
+            True ->
+              #(
+                estado,
+                "Consulte a planta do hospital para encontrar os dígitos.",
+              )
+
+            False ->
+              case enigma_pendente(sala) {
+                Error(_) ->
+                  #(estado, "Nenhum enigma pendente nesta sala.")
+
+                Ok(e) -> {
+                  let #(novo_e, novo_j, ok) =
+                    enigma.tentar_resolver(e, resposta, j)
+
+                  case ok {
+                    True ->
+                      #(
+                        Estado(
+                          novo_j,
+                          substituir_sala(
+                            estado.salas,
+                            ambiente.atualizar_enigma(sala, novo_e),
+                          ),
+                        ),
+                        "Correto! " <> e.nome <> " resolvido.",
+                      )
+
+                    False ->
+                      #(estado, "Resposta incorreta.")
+                  }
+                }
+              }
           }
       }
   }
 }
 
+
 fn mover(estado: Estado, destino: String) -> #(Estado, String) {
-  let novo = Estado(..estado, jogador: jogador.mover(estado.jogador, destino))
+  let movido =
+    jogador.mover(estado.jogador, destino)
+
+  let caiu =
+    destino == "Corredor"
+    && !jogador.tem_item(movido, "lanterna")
+
+  let atualizado = case caiu {
+    True ->
+      jogador.perder_vida(
+        movido,
+        configuracao.dano_queda,
+      )
+
+    False -> movido
+  }
+
+  let novo = Estado(
+    ..estado,
+    jogador: atualizado,
+  )
+
+  let aviso = case caiu {
+    True ->
+      "\nVocê tropeçou no escuro e perdeu 10 HP!"
+
+    False -> ""
+  }
+
   #(
     novo,
     "Você entrou em "
-      <> destino
-      <> ".\n"
-      <> ambiente.explorar(sala_atual(novo), novo.jogador),
+    <> destino
+    <> "."
+    <> aviso
+    <> "\n"
+    <> ambiente.explorar(sala_atual(novo), atualizado),
   )
 }
+
 
 /// Executa uma sequência de ações (fold sobre a lista), descartando as mensagens.
 pub fn executar_todas(estado: Estado, acoes: List(Acao)) -> Estado {
@@ -216,52 +377,57 @@ pub fn executar_todas(estado: Estado, acoes: List(Acao)) -> Estado {
 }
 
 /// Percurso completo da manutenção até a saída.
+
 fn caminho_vitoria() -> List(Acao) {
   [
+    Usar("lanterna"),
+    Usar("chave"),
     Usar("registro"),
     Usar("planta"),
+
     Ir("Corredor"),
     Usar("crachá"),
     Responder("3"),
+
     Ir("Sala 3"),
+    Usar("gerador"),
     Usar("painel"),
-    Responder("312"),
+
+    Responder(
+      "3" <> string.slice(
+        configuracao.codigo_saida,
+        1,
+        2,
+      ),
+    ),
+
     Ir("Saída"),
-    Responder("B12"),
+    Responder(configuracao.codigo_saida),
     Usar("porta de emergência"),
   ]
 }
 
+
+
 pub fn executar_examples() {
-  let e = novo_jogo("Ana")
+  let inicial = novo_jogo("Ana")
 
-  // Sala bloqueada até resolver a trava do corredor
-  let no_corredor = executar_todas(e, [Ir("Corredor")])
+  // Sem chave, nao sai da Manutencao.
   check.eq(
-    executar(no_corredor, Ir("Sala 3")).1,
-    "O acesso a Sala 3 está bloqueado.",
+    executar(inicial, Ir("Corredor")).1,
+    "A porta da Manutenção está trancada. Encontre a chave.",
   )
-  check.eq(executar(e, Ir("Saída")).1, "Não há saída para Saída.")
 
-  // Resposta errada não muda o estado
-  check.eq(executar(no_corredor, Responder("9")), #(
-    no_corredor,
-    "Resposta incorreta.",
-  ))
+  // Sem lanterna, cada entrada no Corredor tira 10 HP.
+  let com_chave =
+    executar(inicial, Usar("chave")).0
 
-  // Objeto inexistente e objeto já usado
-  check.eq(executar(e, Usar("faca")).1, "Não há faca aqui.")
-  let #(e2, msg) = executar(e, Usar("chave"))
-  check.eq(msg, "Você usou chave.")
-  check.eq(executar(e2, Usar("chave")).1, "Você já usou chave.")
-  check.eq(executar(e2, Inventario).1, "Inventário: chave de manutenção")
+  let corredor_escuro =
+    executar(com_chave, Ir("Corredor")).0
 
-  // Painel sem crachá dá choque
-  let na_sala3 =
-    executar_todas(e, [Ir("Corredor"), Responder("3"), Ir("Sala 3")])
   check.eq(
-    executar(na_sala3, Usar("painel")).1,
-    "Você levou um choque! Vida: 90",
+    corredor_escuro.jogador.pontos_de_vida,
+    90,
   )
   check.eq(executar(na_sala3, Responder("312")), #(
     na_sala3,
@@ -278,8 +444,70 @@ pub fn executar_examples() {
   ])
   check.eq(string.contains(executar(com_energia, Explorar).1, "[ligado]"), True)
 
-  // Percurso completo termina em vitória, e depois disso nada muda
-  let fim = executar_todas(e, caminho_vitoria())
+  let manutencao_novamente =
+    executar(corredor_escuro, Ir("Manutenção")).0
+
+  let corredor_outra_vez =
+    executar(manutencao_novamente, Ir("Corredor")).0
+
+  check.eq(
+    corredor_outra_vez.jogador.pontos_de_vida,
+    80,
+  )
+
+  // Sem lanterna, o painel tira 20 HP.
+  let antes_choque = executar_todas(
+    inicial,
+    [
+      Usar("chave"),
+      Ir("Corredor"),
+      Responder("3"),
+      Ir("Sala 3"),
+    ],
+  )
+
+  check.eq(
+    executar(antes_choque, Usar("painel")).0.jogador.pontos_de_vida,
+    70,
+  )
+
+  // Sem lanterna, o gerador nao liga.
+  check.eq(
+    jogador.tem_item(
+      executar(antes_choque, Usar("gerador")).0.jogador,
+      "gerador ligado",
+    ),
+    False,
+  )
+
+  // Sem energia, o segundo enigma fica bloqueado.
+  check.eq(
+    executar(antes_choque, Responder("347")).1,
+    "Restaure a energia antes de resolver a sequência.",
+  )
+
+  // Percurso completo.
+  let com_lanterna =
+    executar(inicial, Usar("lanterna")).0
+
+  let fim =
+    executar_todas(com_lanterna, caminho_vitoria())
+
   check.eq(situacao(fim), Vitoria)
-  check.eq(executar(fim, Explorar), #(fim, "Você já escapou do hospital!"))
+
+  // Depois da vitoria, o estado nao pode mudar.
+  check.eq(executar(fim, Explorar).0, fim)
+
+  // A porta precisa estar realmente aberta.
+  check.eq(
+    case ambiente.buscar_objeto(
+      sala_atual(fim),
+      "porta de emergência",
+    ) {
+      Ok(porta) -> porta.estado
+      Error(_) -> ""
+    },
+    "aberta",
+  )
 }
+
