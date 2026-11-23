@@ -34,11 +34,13 @@ O jogador deve encontrar uma chave, explorar ambientes, obter um crachá, ligar 
 
 ## Execução
 
-Verifique a instalação do SGleam com `sgleam --help`.
+É necessário o SGleam 0.9.0 ou mais recente (o `menu.gleam` usa o módulo `sgleam/env`, que não existe nas versões antigas). Verifique a versão com `sgleam --version`.
 
-Para executar a demonstração textual, utilize `sgleam menu.gleam`.
+Para executar a demonstração textual, utilize `sgleam run menu.gleam`. Cada argumento extra é uma escolha do menu, por exemplo `sgleam run menu.gleam 4 2` (usar objeto, 2º objeto: a chave).
 
-Os testes são definidos por funções terminadas em `_examples` e podem ser executados com o comando `sgleam test`, conforme a versão utilizada.
+Para jogar escolha a escolha no terminal (Git Bash, WSL ou Linux), utilize `bash rodar.sh` e digite `q` para sair.
+
+Os testes são definidos por funções terminadas em `_examples` e podem ser executados com `sgleam test arquivo.gleam`.
 
 A interface gráfica foi desenvolvida com `sgleam/image` e `sgleam/world`, seguindo o material de aula. Sua execução depende de um ambiente SGleam Web compatível que consiga carregar todos os módulos.
 # Trabalho 2 da disciplina de Programação Funcional - Escape Room
@@ -149,14 +151,14 @@ Funções principais:
 - `executar_roteiro(estado, passos)`: executa recursivamente uma lista de `#(MainMenu, String)`; para em `exit()`, na vitória ou na derrota.
 - `iniciar(nome)`: exibe o menu e o status e devolve uma `Partida` nova.
 - `jogar(partida, opcao, arg)`: executa uma jogada e devolve a `Partida` atualizada (para o modo interativo).
-- `main()`: exibe o título e o menu principal (`sgleam menu.gleam`).
+- `main()`: exibe o título e o menu principal (`sgleam run menu.gleam`).
 
 ## Jogando manualmente (modo interativo)
 
 Abra o modo interativo do sgleam com o módulo `menu` carregado:
 
 ```
-sgleam -i menu.gleam
+sgleam repl menu.gleam
 ```
 
 Comece a partida guardando-a em `p`, e a cada jogada atualize `p` com `jogar`:
@@ -164,7 +166,7 @@ Comece a partida guardando-a em `p`, e a cada jogada atualize `p` com `jogar`:
 ```
 let p = iniciar("Ana")
 let p = jogar(p, m1(), "")
-let p = jogar(p, m4(), "registro")
+let p = jogar(p, m4(), "chave")
 let p = jogar(p, m5(), "Corredor")
 let p = jogar(p, m6(), "3")
 ```
@@ -172,12 +174,14 @@ let p = jogar(p, m6(), "3")
 Cada jogada imprime a mensagem e o status, por exemplo:
 
 ```
-> Correto! Trava do Corredor resolvido.
-[Ana | Local: Corredor | Vida: 100 HP | Em andamento]
+menu.gleam:28
+"\n> Correto! Trava do Corredor resolvido."
+menu.gleam:28
+"[Ana | Local: Corredor | Vida: 90 HP | Em andamento]"
 Partida(estado: //fn() { ... })
 ```
 
-A última linha é o valor guardado em `p` e pode ser ignorada. O estado fica
+As linhas `menu.gleam:28` vêm do `echo` usado para imprimir as mensagens. A última linha é o valor guardado em `p` e pode ser ignorada. O estado fica
 dentro de uma função porque o modo interativo só guarda em `let` tipos
 definidos no próprio `menu` e, assim, não imprime o estado inteiro.
 
@@ -208,10 +212,10 @@ Para sair do modo interativo: `Ctrl+D` (ou `Ctrl+Z` e Enter no Windows).
 A partir da pasta `trabalho02/`:
 
 ```
-sgleam -t jogador.gleam
-sgleam -t objeto.gleam
-sgleam -t enigma.gleam
-sgleam -t ambiente.gleam
-sgleam -t jogo.gleam
-sgleam -t menu.gleam
+sgleam test jogador.gleam
+sgleam test objeto.gleam
+sgleam test enigma.gleam
+sgleam test ambiente.gleam
+sgleam test jogo.gleam
+sgleam test menu.gleam
 ```
