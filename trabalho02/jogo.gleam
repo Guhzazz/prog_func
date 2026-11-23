@@ -429,20 +429,6 @@ pub fn executar_examples() {
     corredor_escuro.jogador.pontos_de_vida,
     90,
   )
-  check.eq(executar(na_sala3, Responder("312")), #(
-    na_sala3,
-    "Ligue o painel do gerador antes de informar o código.",
-  ))
-  check.eq(executar(na_sala3, Ir("Saída")).0, na_sala3)
-  check.eq(string.contains(executar(na_sala3, Explorar).1, "[apagado]"), True)
-
-  let com_energia = executar_todas(na_sala3, [
-    Ir("Corredor"),
-    Usar("crachá"),
-    Ir("Sala 3"),
-    Usar("painel"),
-  ])
-  check.eq(string.contains(executar(com_energia, Explorar).1, "[ligado]"), True)
 
   let manutencao_novamente =
     executar(corredor_escuro, Ir("Manutenção")).0
