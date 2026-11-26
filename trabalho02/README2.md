@@ -30,7 +30,6 @@ O jogador deve encontrar uma chave, explorar ambientes, obter um crachá, ligar 
 - ambiente.gleam: ambientes e conexões.
 - jogo.gleam: lógica da partida.
 - menu.gleam: demonstração no terminal.
-- visual.gleam: interface gráfica.
 
 ## Execução
 
@@ -41,8 +40,6 @@ Para executar a demonstração textual, utilize `sgleam run menu.gleam`. Cada ar
 Para jogar escolha a escolha no terminal (Git Bash, WSL ou Linux), utilize `bash rodar.sh` e digite `q` para sair.
 
 Os testes são definidos por funções terminadas em `_examples` e podem ser executados com `sgleam test arquivo.gleam`.
-
-A interface gráfica foi desenvolvida com `sgleam/image` e `sgleam/world`, seguindo o material de aula. Sua execução depende de um ambiente SGleam Web compatível que consiga carregar todos os módulos.
 # Trabalho 2 da disciplina de Programação Funcional - Escape Room
 ## Tema: Hospital no escuro
 Obs: Neste trabalho, ao contrário do primeiro, não utilizaremos módulos separados para os exemplos, apenas os módulos que separam o código para manter organização e clareza.
@@ -62,7 +59,7 @@ emergência, onde o terminal de segurança libera a rota e a porta se abre.
 **Objetivo:** reabrir a rota segura de evacuação, abrindo a porta de emergência.
 
 **Derrota:** os pontos de vida chegam a zero (o painel do gerador dá choque de
-10 de vida em quem tenta ligá-lo sem o crachá do técnico).
+20 de vida em quem tenta ligá-lo sem a lanterna).
 
 ## Mapa das salas
 
@@ -76,18 +73,18 @@ Manutenção  <-->  Corredor  <-->  Sala 3  <-->  Saída
 |---|---|---|---|
 | Manutenção | lanterna, chave, registro, planta | — | — (sala inicial) |
 | Corredor | crachá | Trava do Corredor | — |
-| Sala 3 | painel | Sequência do Gerador | `acesso corredor` |
+| Sala 3 | gerador, painel | Sequência do Gerador | `acesso corredor` |
 | Saída | porta de emergência | Terminal de Saída | `codigo evacuacao` |
 
 ## Pistas e enigmas
 
 | Enigma | Pergunta | De onde vem a resposta | Resposta | Recompensa |
 |---|---|---|---|---|
-| Trava do Corredor | número da sala do gerador | registro: "gerador na sala 3" | `3` | `acesso corredor` |
-| Sequência do Gerador | sala do gerador + dígitos da porta técnica | registro (3) + planta (B12) | `312` | `codigo evacuacao` |
-| Terminal de Saída | código completo da porta técnica | planta: "porta técnica B12" | `B12` | `rota liberada` |
+| Trava do Corredor | número da sala do gerador | registro: "gerador auxiliar instalado na sala 3" | `3` | `acesso corredor` |
+| Sequência do Gerador | sala do gerador + dígitos da porta técnica | registro (3) + planta (B47) | `347` | `codigo evacuacao` |
+| Terminal de Saída | código completo da porta técnica | planta: "porta técnica B47" | `B47` | `rota liberada` |
 
-As respostas ignoram maiúsculas/minúsculas e espaços nas pontas (`" b12 "` também vale).
+As respostas ignoram maiúsculas/minúsculas e espaços nas pontas (`" b47 "` também vale).
 
 ## Caminho completo até a saída
 
@@ -97,17 +94,20 @@ Manutenção, com 100 de vida e inventário vazio.
 
 | # | Sala | Ação | O que acontece |
 |---|---|---|---|
-| 1 | Manutenção | `Usar("registro")` | ganha `pista: gerador na sala 3` |
-| 2 | Manutenção | `Usar("planta")` | ganha `pista: porta técnica B12` |
-| 3 | Manutenção | `Ir("Corredor")` | entra no Corredor |
-| 4 | Corredor | `Usar("crachá")` | ganha `crachá` (evita o choque no painel) |
-| 5 | Corredor | `Responder("3")` | resolve a Trava do Corredor, ganha `acesso corredor` |
-| 6 | Corredor | `Ir("Sala 3")` | entra na sala do gerador |
-| 7 | Sala 3 | `Usar("painel")` | com o crachá, ganha `energia restaurada` |
-| 8 | Sala 3 | `Responder("312")` | resolve a Sequência do Gerador, ganha `codigo evacuacao` |
-| 9 | Sala 3 | `Ir("Saída")` | entra na Saída |
-| 10 | Saída | `Responder("B12")` | resolve o Terminal de Saída, ganha `rota liberada` |
-| 11 | Saída | `Usar("porta de emergência")` | ganha `porta aberta` → **Vitória** |
+| 1 | Manutenção | `Usar("lanterna")` | ganha `lanterna` (evita a queda no Corredor e o choque no painel) |
+| 2 | Manutenção | `Usar("chave")` | ganha `chave de manutenção` (libera a porta para o Corredor) |
+| 3 | Manutenção | `Usar("registro")` | ganha `registro: gerador auxiliar instalado na sala 3` |
+| 4 | Manutenção | `Usar("planta")` | ganha `pista: porta técnica B47` |
+| 5 | Manutenção | `Ir("Corredor")` | entra no Corredor |
+| 6 | Corredor | `Usar("crachá")` | ganha `crachá` (exigido para ligar o painel) |
+| 7 | Corredor | `Responder("3")` | resolve a Trava do Corredor, ganha `acesso corredor` |
+| 8 | Corredor | `Ir("Sala 3")` | entra na sala do gerador |
+| 9 | Sala 3 | `Usar("gerador")` | com a lanterna, ganha `gerador ligado` |
+| 10 | Sala 3 | `Usar("painel")` | com lanterna, crachá e gerador ligado, ganha `energia restaurada` |
+| 11 | Sala 3 | `Responder("347")` | resolve a Sequência do Gerador, ganha `codigo evacuacao` |
+| 12 | Sala 3 | `Ir("Saída")` | entra na Saída |
+| 13 | Saída | `Responder("B47")` | resolve o Terminal de Saída, ganha `rota liberada` |
+| 14 | Saída | `Usar("porta de emergência")` | ganha `porta aberta` → **Vitória** |
 
 A qualquer momento, `Explorar` mostra a sala, os objetos e as saídas;
 `Inventario` lista os itens; e `Enigmas` mostra o enigma pendente da sala com
@@ -120,12 +120,13 @@ depois disso, nenhuma ação altera o estado.
 ### O que acontece fora do caminho
 
 - `Ir("Sala 3")` antes de resolver a Trava do Corredor: "O acesso a Sala 3 está bloqueado."
-- `Usar("painel")` sem o crachá: choque, perde 10 de vida e o painel continua apagado.
+- `Usar("painel")` sem a lanterna: choque, perde 20 de vida e o painel continua apagado.
 - Na Sala 3, o painel precisa estar ligado para aceitar a sequência do gerador. Use `Explorar` para verificar se ele está `[apagado]` ou `[ligado]`.
 - `Usar("porta de emergência")` antes do terminal: nada acontece, a porta continua trancada.
 - Resposta errada: "Resposta incorreta." e o estado não muda.
 - Usar um objeto já usado: "Você já usou ..." (o item não é duplicado).
-- A lanterna e a chave de manutenção podem ser pegas, mas não são exigidas para sair.
+- `Ir("Corredor")` sem a chave: "A porta da Manutenção está trancada. Encontre a chave."
+- `Ir("Corredor")` sem a lanterna: o jogador tropeça e perde 10 de vida.
 
 ## Módulo `menu` (apresentação no terminal)
 
@@ -200,7 +201,7 @@ Comandos:
 Jogadas para testar os erros:
 
 - `jogar(p, m5(), "Sala 3")` logo no início: "Não há saída para Sala 3."
-- `jogar(p, m4(), "painel")` na Sala 3 sem ter pego o crachá: choque, a vida cai para 90.
+- `jogar(p, m4(), "painel")` na Sala 3 sem ter pego a lanterna: choque, a vida cai 20 HP.
 - `jogar(p, m6(), "999")`: "Resposta incorreta."
 
 O caminho até a vitória está na seção "Caminho completo até a saída".
